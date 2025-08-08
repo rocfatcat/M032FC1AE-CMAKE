@@ -1,0 +1,16 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "M032FC1AE",
+      "displayName": "M032FC1AE Preset",
+      "generator": "Ninja",
+      "description": "Use Ninja generator",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "toolchainFile": "${sourceDir}/cmake/toolchain-arm-none-eabi.cmake"
+    }
+  ]
+}

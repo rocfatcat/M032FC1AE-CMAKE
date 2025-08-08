@@ -1,0 +1,19 @@
+set(OBJECT_GEN_FLAGS "-mcpu=cortex-m0")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OBJECT_GEN_FLAGS}" CACHE INTERNAL "C Compiler options")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OBJECT_GEN_FLAGS}" CACHE INTERNAL "C++ Compiler options")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${OBJECT_GEN_FLAGS}" CACHE INTERNAL "ASM Compiler options")
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "Using GCC compiler.")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    message(STATUS "Using Clang compiler.")
+else()
+    message(WARNING "Unknown compiler: ${CMAKE_C_COMPILER_ID}")
+endif()
+
+message(STATUS "CMAKE_C_COMPILER_ID: ${CMAKE_C_COMPILER_ID}")
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  set(CMAKE_DEPFILE_FLAGS_C "-MMD -MP -MT <DEP_TARGET> -MF <DEP_FILE>")
+  set(CMAKE_DEPFILE_FLAGS_CXX "-MMD -MP -MT <DEP_TARGET> -MF <DEP_FILE>")
+endif()
