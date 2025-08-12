@@ -27,6 +27,9 @@ function(configure_target_linking target)
     target_link_options(${target} PRIVATE
         "-T${script}"
         "-Xlinker" "--gc-sections"
-        "-Wl,-Map=${target}.map"
+        "-Wl,-Map=${target}.map" 
+        # "-nostartfiles"
+        # "-nostdlib"
+        # "--specs=nano.specs" "--specs=nosys.specs"
     )
 endfunction()

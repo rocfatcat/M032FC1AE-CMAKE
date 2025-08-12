@@ -16,4 +16,5 @@ include(LinkerScript)
 # Configure your project
 #-------------------------------------------------------------------------------
 
-add_subdirectory(app/template)
+# add_subdirectory(app/template)
+add_subdirectory(app/isp_msd)
