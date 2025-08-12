@@ -15,7 +15,7 @@
  * This template application uses external crystal as HCLK source and configures UART0 to print out
  * "Hello World", users may need to do extra system configuration based on their system design.
  */
-void SystemInit(void){ }
+
 void SYS_Init(void)
 {
         /* Unlock protected registers */
@@ -49,11 +49,36 @@ void SYS_Init(void)
     SYS_LockReg();
 
 }
+void gotoAPROM(void)
+{
+    /* Boot from AP */
+    FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
+    NVIC_SystemReset();
+    //SYS->IPRST0 = SYS_IPRST0_CPURST_Msk;
+    while(1);
+}
 
 
 int main()
 {
+    uint32_t u32TrimInit;
 
+    /* The code should boot from LDROM: check the boot setting */
+    
+    /* Check if GPA.0 is low */
+    if (PE8 != 0)
+    {
+        /* Boot from AP */
+        gotoAPROM();
+    }
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
+    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
+    
+    SYS_Init();
 
     /* Got no where to go, just loop forever */
     while(1);
