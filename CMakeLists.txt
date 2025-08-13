@@ -17,4 +17,5 @@ include(LinkerScript)
 #-------------------------------------------------------------------------------
 
 # add_subdirectory(app/template)
-add_subdirectory(app/isp_msd)
+# add_subdirectory(app/isp_msd)
+add_subdirectory(app/iap_ldrom)

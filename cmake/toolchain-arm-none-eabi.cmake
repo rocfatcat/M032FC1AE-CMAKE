@@ -6,8 +6,8 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
 
 # Toolchain prefix (modify as needed)
-set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10" CACHE PATH "Path to the ARM toolchain prefix")
-
+# set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10" CACHE PATH "Path to the ARM toolchain prefix")
+set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1" CACHE PATH "Path to the ARM toolchain prefix")
 # Convert Windows path with spaces to CMake-safe path
 file(TO_CMAKE_PATH "${TOOLCHAIN_PREFIX}" TOOLCHAIN_PREFIX)
 
