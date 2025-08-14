@@ -1,8 +1,8 @@
 MEMORY
 {
-  IROM2 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
-  IROM1 (rx) : ORIGIN = 0x0000F000, LENGTH = 0x1000    /* 4KB */
-  RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
+    IROM1 (rx) : ORIGIN = 0x0000F000, LENGTH = 0x1000    /* 4KB */
+    IROM2 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
+    RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
 }
 
 GROUP(libgcc.a libc.a libm.a libnosys.a)
@@ -12,19 +12,19 @@ ENTRY(Reset_Handler)
 SECTIONS
 {
     /* IROM2：手動標記放置大函式 / 少用函式 */
-    .text_extra :
-    {
-        __text_extra_start = .;
-        KEEP(*(.text_extra*))   /* 程式碼中用 __attribute__((section(".text_extra"))) 標記 */
-        KEEP(*(.rodata_extra*)) /* 只要大表格或常量也可以放這裡 */
-        __text_extra_end = .;
-    } > IROM2 AT > IROM2
-
     .irom2_text :
     {
         __irom2_text_start = .;
-         *(.irom2_text*)
-         __irom2_text_end = .;
+        *(.irom2_text*)
+        __irom2_text_end = .;
+    } > IROM2 AT > IROM2
+
+    /* IROM2：專用常數與指標陣列段 */
+    .rodata_irom2 :
+    {
+        __rodata_irom2_start = .;
+        KEEP(*(.rodata_irom2*))
+        __rodata_irom2_end = .;
     } > IROM2 AT > IROM2
 
     /* IROM2：放 pointer 陣列 (uint8_t* / uint32_t*) */
@@ -68,8 +68,6 @@ SECTIONS
         KEEP(*(.eh_frame*))
     } > IROM1 AT > IROM1
 
-
-
     /* Exception unwinding tables */
     .ARM.extab :
     {
@@ -112,7 +110,6 @@ SECTIONS
         KEEP(*(.jcr*))
         . = ALIGN(4);
         __data_end__ = .;
-
     } > RAM
 
     /* BSS section */

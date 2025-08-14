@@ -11,12 +11,14 @@
 #include "isp_user.h"
 #include "fmc.h"
 
-uint32_t GetApromSize()
+#define IROM2_SECTION __attribute__((section(".irom2_text"), used))
+
+IROM2_SECTION uint32_t GetApromSize()
 {
     return BOOTLOADER_OFFSET;
 }
 
-void GetDataFlashInfo(uint32_t *addr, uint32_t *size)
+IROM2_SECTION void GetDataFlashInfo(uint32_t *addr, uint32_t *size)
 {
     uint32_t uData;
     *size = 0;

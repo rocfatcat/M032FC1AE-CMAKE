@@ -17,7 +17,7 @@
     #pragma data_alignment=4
     uint8_t HID_DeviceReportDescriptor[] =
 #else
-    const uint8_t HID_DeviceReportDescriptor[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t HID_DeviceReportDescriptor[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     0x06, 0x00, 0xFF,   // Usage Page = 0xFF00 (Vendor Defined Page 1)
@@ -47,7 +47,7 @@
     #pragma data_alignment=4
     uint8_t gu8DeviceDescriptor[] =
 #else
-    const uint8_t gu8DeviceDescriptor[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8DeviceDescriptor[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     LEN_DEVICE,     /* bLength */
@@ -75,7 +75,7 @@
     #pragma data_alignment=4
     uint8_t gu8ConfigDescriptor[] =
 #else
-    const uint8_t gu8ConfigDescriptor[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8ConfigDescriptor[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     LEN_CONFIG,     /* bLength */
@@ -137,7 +137,7 @@
     #pragma data_alignment=4
     uint8_t gu8StringLang[4] =
 #else
-    const uint8_t gu8StringLang[4] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8StringLang[4] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     4,              /* bLength */
@@ -150,7 +150,7 @@
     #pragma data_alignment=4
     uint8_t gu8VendorStringDesc[] =
 #else
-    const uint8_t gu8VendorStringDesc[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8VendorStringDesc[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     16,
@@ -164,7 +164,7 @@
     #pragma data_alignment=4
     uint8_t gu8ProductStringDesc[] =
 #else
-    const uint8_t gu8ProductStringDesc[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8ProductStringDesc[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     16,             /* bLength          */
@@ -177,7 +177,7 @@
     #pragma data_alignment=4
     uint8_t gu8BOSDescriptor[] =
 #else
-    const uint8_t gu8BOSDescriptor[] __attribute__((section(".text_extra"), aligned(4), used)) =
+    const uint8_t gu8BOSDescriptor[] __attribute__((section(".rodata_irom2"), aligned(4), used)) =
 #endif
 {
     LEN_BOS,        /* bLength */
@@ -203,7 +203,7 @@ const uint8_t *gpu8UsbString[4] __attribute__((section(".rodata_ptr8"), aligned(
     0,
 };
 
-const uint8_t *gu8UsbHidReport[3] __attribute__((section(".rodata_ptr9"), aligned(4), used)) =
+const uint8_t *gu8UsbHidReport[3] __attribute__((section(".rodata_ptr8"), aligned(4), used)) =
 {
     HID_DeviceReportDescriptor,
     0,
@@ -224,7 +224,7 @@ const uint32_t gu32ConfigHidDescIdx[3] __attribute__((section(".rodata_ptr32"), 
     0,
 };
 
-const S_USBD_INFO_T gsInfo __attribute__((section(".text_extra"), used)) =
+const S_USBD_INFO_T gsInfo __attribute__((section(".rodata_irom2"), used)) =
 {
     (uint8_t *)gu8DeviceDescriptor,
     (uint8_t *)gu8ConfigDescriptor,

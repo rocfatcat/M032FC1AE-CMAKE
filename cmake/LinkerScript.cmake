@@ -30,6 +30,7 @@ function(configure_target_linking target)
         "-Wl,-Map=${target}.map" 
         # "-nostartfiles"
         # "-nostdlib"
-        # "--specs=nano.specs" "--specs=nosys.specs"
+        "--specs=nano.specs" 
+        #"--specs=nosys.specs"
     )
 endfunction()

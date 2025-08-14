@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
-    ${CMAKE_CURRENT_SOURCE_DIR}/startup_M031Series.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.c
+
 
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/acmp.c
@@ -17,12 +16,12 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pwm.c
     # ${M031BSP_DIR}/Library/StdDriver/src/qspi.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
+    ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
     # ${M031BSP_DIR}/Library/StdDriver/src/rtc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/sys.c
+    ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -30,9 +29,11 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/wdt.c
     # ${M031BSP_DIR}/Library/StdDriver/src/wwdt.c
 
-    # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/_syscalls.c
-    # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/startup_M031Series.S
-    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/system_M031Series.c
+    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/_syscalls.c
+    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/startup_M031Series.S
+    # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/system_M031Series.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
 
 )
 
@@ -50,13 +51,14 @@ target_include_directories(test
 # 自動套用所有 linker 選項 + script
 #configure_target_linking(test)
 
-    target_link_options(test PRIVATE
-        "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm.ld"
-        "-Xlinker" "--gc-sections"
-        "-Wl,-Map=test.map" 
-        "-nostartfiles"
-        "-nostdlib"
-        # "--specs=nano.specs" "--specs=nosys.specs"
-    )
-finalize_output(test)
+target_link_options(test PRIVATE
+    "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
+    "-Xlinker" "--gc-sections"
+    "-Wl,-Map=test.map" 
+    # "-nostartfiles"
+    # "-nostdlib"
+    "--specs=nano.specs" 
+    #"--specs=nosys.specs"
+)
 
+finalize_output(test)
