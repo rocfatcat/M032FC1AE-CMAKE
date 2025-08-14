@@ -59,10 +59,10 @@ set(CMAKE_ASM_FLAGS_DEBUG "-g" CACHE INTERNAL "ASM Compiler options for debug")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-Wl,--print-memory-usage" CACHE INTERNAL "Linker debug options")
 
 # Release flags
-set(CMAKE_C_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "C Compiler options for release")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "C++ Compiler options for release")
+set(CMAKE_C_FLAGS_RELEASE "-Os" CACHE INTERNAL "C Compiler options for release")
+set(CMAKE_CXX_FLAGS_RELEASE "-Os" CACHE INTERNAL "C++ Compiler options for release")
 set(CMAKE_ASM_FLAGS_RELEASE "" CACHE INTERNAL "ASM Compiler options for release")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Wl,--print-memory-usage -flto" CACHE INTERNAL "Linker options for release")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Wl,--print-memory-usage" CACHE INTERNAL "Linker options for release")
 
 # ------------------------------------------------------------------------------
 # Set actual compiler paths

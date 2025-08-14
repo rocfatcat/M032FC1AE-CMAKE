@@ -16,7 +16,7 @@ add_executable(template
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pwm.c
     # ${M031BSP_DIR}/Library/StdDriver/src/qspi.c
-    ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
     # ${M031BSP_DIR}/Library/StdDriver/src/rtc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c

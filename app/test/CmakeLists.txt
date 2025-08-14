@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
-
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
 
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/acmp.c
@@ -30,10 +32,8 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/wwdt.c
 
     ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/_syscalls.c
-    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/startup_M031Series.S
+    # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/startup_M031Series.S
     # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/system_M031Series.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
 
 )
 
@@ -55,10 +55,10 @@ target_link_options(test PRIVATE
     "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
     "-Xlinker" "--gc-sections"
     "-Wl,-Map=test.map" 
-    # "-nostartfiles"
-    # "-nostdlib"
-    "--specs=nano.specs" 
+    "-nostartfiles"
+    "-nostdlib"
+    # "--specs=nano.specs" 
     #"--specs=nosys.specs"
 )
-
+# configure_target_linking(test)
 finalize_output(test)
