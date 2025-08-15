@@ -69,5 +69,28 @@ target_link_options(iap_ldrom PRIVATE
     "--specs=nano.specs"
     # "--specs=nosys.specs"
 )
-finalize_output(iap_ldrom)
+# finalize_output(iap_ldrom)
 
+# 生成 IROM1.bin
+add_custom_command(
+    TARGET iap_ldrom POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.text
+            --only-section=.rodata
+            "$<TARGET_FILE:iap_ldrom>"
+            "${CMAKE_CURRENT_BINARY_DIR}/APROM.bin"
+    COMMENT "Generating IROM1.bin"
+)
+
+# 生成 IROM2.bin
+add_custom_command(
+    TARGET iap_ldrom POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.irom2_text
+            --only-section=.rodata_irom2
+            --only-section=.rodata_ptr8
+            --only-section=.rodata_ptr32
+            "$<TARGET_FILE:iap_ldrom>"
+            "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
+    COMMENT "Generating IROM2.bin"
+)

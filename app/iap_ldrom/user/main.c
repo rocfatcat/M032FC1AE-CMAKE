@@ -11,7 +11,15 @@
 #include "isp_user.h"
 #include "hid_transfer.h"
 
-
+void _exit(int status)
+{
+    (void)status;
+    while (1)
+    {
+        // 如果要重啟可以用：
+        // NVIC_SystemReset();
+    }
+}
 /*
  * This is a template project for M031 series MCU. Users could based on this project to create their
  * own application without worry about the IAR/Keil project settings.

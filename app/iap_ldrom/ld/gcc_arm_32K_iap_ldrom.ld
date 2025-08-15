@@ -5,7 +5,8 @@ MEMORY
     RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
 }
 
-GROUP(libgcc.a libc.a libm.a libnosys.a)
+/* GROUP(libgcc.a libc.a libm.a libnosys.a) */
+GROUP(libgcc.a)
 
 ENTRY(Reset_Handler)
 

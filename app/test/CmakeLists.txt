@@ -18,7 +18,7 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pwm.c
     # ${M031BSP_DIR}/Library/StdDriver/src/qspi.c
-    ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
     # ${M031BSP_DIR}/Library/StdDriver/src/rtc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
@@ -61,4 +61,29 @@ target_link_options(test PRIVATE
     #"--specs=nosys.specs"
 )
 # configure_target_linking(test)
-finalize_output(test)
+#finalize_output(test)
+
+# 生成 IROM1.bin
+add_custom_command(
+    TARGET test POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.text
+            --only-section=.rodata
+            "$<TARGET_FILE:test>"
+            "${CMAKE_CURRENT_BINARY_DIR}/APROM.bin"
+    COMMENT "Generating IROM1.bin"
+)
+
+# 生成 IROM2.bin
+add_custom_command(
+    TARGET test POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.irom2_text
+            --only-section=.rodata_irom2
+            --only-section=.rodata_ptr8
+            --only-section=.rodata_ptr32
+            "$<TARGET_FILE:test>"
+            "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
+    # COMMAND python -c "f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin.tmp','rb');d=f.read();f.close();f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin','wb');f.write(b'\\xFF'*0x7000+d);f.close()"
+    COMMENT "Generating LDROM.bin"
+)

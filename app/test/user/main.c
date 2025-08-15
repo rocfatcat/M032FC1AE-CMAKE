@@ -58,10 +58,32 @@ IROM2_SECTION int main()
     UART_Open(UART0, 115200);
 
     /* Connect UART to PC, and open a terminal tool to receive following message */
-    printf("Hello World\n");
+    // printf("Hello World\n");
 
-    /* Got no where to go, just loop forever */
-    while(1);
+    uint32_t u32Count = 0;
+    uint8_t pu8TxBuf[] = "Hello World\n\r";
+    uint32_t u32WriteBytes = sizeof(pu8TxBuf) - 1;
+    while(1)
+    {
+        /* Print out a message every 1000 ms */
+        // if(u32Count++ >= 1000)
+        // {
+            // u32Count = 0;
+            // printf("Hello World\n");
+            UART_Write(UART0, pu8TxBuf, u32WriteBytes);
+        // }
+    }
 }
+/* memcpy: 將 src 的前 n 個 byte 複製到 dest */
+void *memcpy(void *dest, const void *src, size_t n)
+{
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
 
+    while (n--) {
+        *d++ = *s++;
+    }
+
+    return dest;
+}
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

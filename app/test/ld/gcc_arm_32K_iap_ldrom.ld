@@ -1,11 +1,12 @@
 MEMORY
 {
-    IROM1 (rx) : ORIGIN = 0x0000F000, LENGTH = 0x1000    /* 4KB */
+    IROM1 (rx) : ORIGIN = 0x00007000, LENGTH = 0x1000    /* 4KB */
     IROM2 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
     RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
 }
 
-GROUP(libgcc.a libc.a libm.a libnosys.a)
+/* GROUP(libgcc.a libc.a libm.a libnosys.a) */
+GROUP(libgcc.a)
 
 ENTRY(Reset_Handler)
 
