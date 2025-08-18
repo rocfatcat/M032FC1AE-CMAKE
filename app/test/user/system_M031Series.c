@@ -28,7 +28,7 @@ uint32_t CyclesPerUs      = (__HSI / 1000000);  /*!< Cycles per micro second    
 uint32_t PllClock         = __HSI;              /*!< PLL Output Clock Frequency          */
 const uint32_t gau32ClkSrcTbl[] = {__HXT, __LXT, __HSI, __LIRC, __HIRC, 0UL, 0UL, __HIRC};
 
-#define IROM2_SECTION __attribute__((section(".irom2_text"), used))
+#define IROM2_SECTION  __attribute__((section(".irom2_text"), used))
 
 /**
  * @brief    Update the Variable SystemCoreClock

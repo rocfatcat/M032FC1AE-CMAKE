@@ -1,7 +1,7 @@
 MEMORY
 {
-    IROM1 (rx) : ORIGIN = 0x00007000, LENGTH = 0x1000    /* 4KB */
-    IROM2 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
+    IROM2 (rx) : ORIGIN = 0x00007000, LENGTH = 0x1000    /* 4KB */
+    IROM1 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
     RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
 }
 

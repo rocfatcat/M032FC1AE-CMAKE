@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
 
@@ -23,7 +24,7 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -50,14 +51,16 @@ target_include_directories(test
 
 # 自動套用所有 linker 選項 + script
 #configure_target_linking(test)
+# target_link_options(test PRIVATE -Wl,-N)
 
 target_link_options(test PRIVATE
     "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
     "-Xlinker" "--gc-sections"
-    "-Wl,-Map=test.map" 
+    "-Wl,-Map=test.map"
+    "-Wl,-N"
     "-nostartfiles"
     "-nostdlib"
-    # "--specs=nano.specs" 
+    "--specs=nano.specs" 
     #"--specs=nosys.specs"
 )
 # configure_target_linking(test)

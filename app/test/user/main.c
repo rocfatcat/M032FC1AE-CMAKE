@@ -50,6 +50,10 @@ IROM2_SECTION void SYS_Init(void)
  * "Hello World", users may need to do extra system configuration based on their system design.
  */
 
+#define IROM2_SECTION_D __attribute__((section(".rodata_irom2"), used))
+
+IROM2_SECTION_D uint8_t const pu8TxBuff[] = "Hello World WTF\n\r";
+IROM2_SECTION_D uint32_t const u32WriteBytes = sizeof(pu8TxBuff) - 1;
 IROM2_SECTION int main()
 {
     SYS_Init();
@@ -61,8 +65,13 @@ IROM2_SECTION int main()
     // printf("Hello World\n");
 
     uint32_t u32Count = 0;
-    uint8_t pu8TxBuf[] = "Hello World\n\r";
-    uint32_t u32WriteBytes = sizeof(pu8TxBuf) - 1;
+    uint8_t pu8TxBuf[30] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    // uint32_t u32WriteBytes = sizeof(pu8TxBuf) - 1;
+    for (uint32_t i = 0; i < u32WriteBytes; i++)
+    {
+        pu8TxBuf[i] = pu8TxBuff[i];
+    }
+    u32Count = 0;
     while(1)
     {
         /* Print out a message every 1000 ms */
