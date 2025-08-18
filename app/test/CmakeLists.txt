@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
 
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/acmp.c
@@ -24,7 +25,7 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -34,7 +35,7 @@ add_executable(test
 
     ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/_syscalls.c
     # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/startup_M031Series.S
-    # ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/system_M031Series.c
+    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/system_M031Series.c
 
 )
 
@@ -58,7 +59,7 @@ target_link_options(test PRIVATE
     "-Xlinker" "--gc-sections"
     "-Wl,-Map=test.map"
     "-Wl,-N"
-    "-nostartfiles"
+    # "-nostartfiles"
     "-nostdlib"
     "--specs=nano.specs" 
     #"--specs=nosys.specs"
@@ -73,8 +74,8 @@ add_custom_command(
             --only-section=.text
             --only-section=.rodata
             "$<TARGET_FILE:test>"
-            "${CMAKE_CURRENT_BINARY_DIR}/APROM.bin"
-    COMMENT "Generating IROM1.bin"
+            "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
+    COMMENT "Generating LDROM.bin"
 )
 
 # 生成 IROM2.bin
@@ -86,7 +87,7 @@ add_custom_command(
             --only-section=.rodata_ptr8
             --only-section=.rodata_ptr32
             "$<TARGET_FILE:test>"
-            "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
+            "${CMAKE_CURRENT_BINARY_DIR}/APPOM.bin"
     # COMMAND python -c "f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin.tmp','rb');d=f.read();f.close();f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin','wb');f.write(b'\\xFF'*0x7000+d);f.close()"
-    COMMENT "Generating LDROM.bin"
+    COMMENT "Generating APROM.bin"
 )

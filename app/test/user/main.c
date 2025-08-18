@@ -8,10 +8,10 @@
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
-#define IROM2_SECTION __attribute__((section(".irom2_text"), used))
+#define IROM2_SECTION //__attribute__((section(".irom2_text"), used))
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
 
-IROM2_SECTION void SYS_Init(void)
+void SYS_Init(void)
 {
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -50,11 +50,14 @@ IROM2_SECTION void SYS_Init(void)
  * "Hello World", users may need to do extra system configuration based on their system design.
  */
 
-#define IROM2_SECTION_D __attribute__((section(".rodata_irom2"), used))
+// #define IROM2_DATA_SECTION __attribute__((section(".rodata_irom2"), used))
+#define IROM2_DATA_SECTION __attribute__((section(".irom2_text"), used))
 
-IROM2_SECTION_D uint8_t const pu8TxBuff[] = "Hello World WTF\n\r";
-IROM2_SECTION_D uint32_t const u32WriteBytes = sizeof(pu8TxBuff) - 1;
-IROM2_SECTION int main()
+IROM2_DATA_SECTION uint8_t const pu8TxBuff[] = {'H', 'e', 'l', 'l','o', ' ', 'W', 'o', 'r', 'l', 'd', '!', '\r', '\n','\n','\n'};
+IROM2_DATA_SECTION uint32_t const u32WriteBytes = sizeof(pu8TxBuff) - 1;
+
+
+int main()
 {
     SYS_Init();
 
@@ -67,7 +70,7 @@ IROM2_SECTION int main()
     uint32_t u32Count = 0;
     uint8_t pu8TxBuf[30] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     // uint32_t u32WriteBytes = sizeof(pu8TxBuf) - 1;
-    for (uint32_t i = 0; i < u32WriteBytes; i++)
+    for (uint32_t i = 0; i < 15; i++)
     {
         pu8TxBuf[i] = pu8TxBuff[i];
     }
@@ -79,7 +82,7 @@ IROM2_SECTION int main()
         // {
             // u32Count = 0;
             // printf("Hello World\n");
-            UART_Write(UART0, pu8TxBuf, u32WriteBytes);
+            UART_Write(UART0, pu8TxBuf, 14);
         // }
     }
 }
