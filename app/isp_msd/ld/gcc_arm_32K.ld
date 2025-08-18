@@ -6,6 +6,7 @@ MEMORY
 }
 
 /* Library configurations */
+/* GROUP(libgcc.a libc.a libm.a libnosys.a) */
 GROUP(libgcc.a libc.a libm.a libnosys.a)
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -141,7 +142,6 @@ SECTIONS
 		KEEP(*(SORT(.init_array.*)))
 		KEEP(*(.init_array))
 		PROVIDE_HIDDEN (__init_array_end = .);
-
 
 		. = ALIGN(4);
 		/* finit data */

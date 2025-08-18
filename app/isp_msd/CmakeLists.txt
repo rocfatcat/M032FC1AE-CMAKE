@@ -10,6 +10,7 @@ add_executable(isp_msd
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series_user.s
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series_User.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
+    ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/_syscalls.c
 
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/acmp.c
@@ -49,9 +50,20 @@ target_include_directories(isp_msd
 # ex: cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake ..
 
 # 可選：自定 linker script，否則使用預設值
-set_linker_script(isp_msd "${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32k.ld")
+# set_linker_script(isp_msd "${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32k.ld")
 
 # 自動套用所有 linker 選項 + script
-configure_target_linking(isp_msd)
+# configure_target_linking(isp_msd)
+target_link_options(isp_msd PRIVATE
+    # "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
+    "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32k.ld"
+    "-Xlinker" "--gc-sections"
+    "-Wl,-Map=isp_msd.map"
+    # "-Wl,-N"
+    # "-nostartfiles"
+    # "-nostdlib"
+    "--specs=nano.specs" 
+    # "--specs=nosys.specs"
+)
 finalize_output(isp_msd)
 
