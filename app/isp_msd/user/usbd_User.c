@@ -9,7 +9,7 @@
 
 #include <string.h>
 #include "M031Series_User.h"
-
+#include "rom.h"
 #if 0
 #define DBG_PRINTF      printf
 #else
@@ -57,13 +57,13 @@ const S_USBD_INFO_T *g_usbd_sInfo;                  /*!< A pointer for USB infor
 void MSC_ClassRequest(void);
 void MSC_SetConfig(void);
 
-void USBD_Ctrl_Stall(void)
+IROM2_SECTION void USBD_Ctrl_Stall(void)
 {
     USBD_SET_EP_STALL(EP0);
     USBD_SET_EP_STALL(EP1);
 }
 
-void USBD_MemReset(uint8_t *src, uint32_t size)
+IROM2_SECTION void USBD_MemReset(uint8_t *src, uint32_t size)
 {
     while(size--) *src++ = 0;
 }
@@ -79,7 +79,7 @@ void USBD_MemReset(uint8_t *src, uint32_t size)
   *
   * @details    This function will enable USB controller, USB PHY transceiver and pull-up resistor of USB_D+ pin. USB PHY will drive SE0 to bus.
   */
-void USBD_Open(const S_USBD_INFO_T *param)
+IROM2_SECTION void USBD_Open(const S_USBD_INFO_T *param)
 {
     g_usbd_sInfo = param;
 
@@ -122,7 +122,7 @@ void USBD_Open(const S_USBD_INFO_T *param)
   * @details    Store SETUP packet to a user-specified buffer.
   *
   */
-void USBD_GetSetupPacket(uint8_t *buf)
+IROM2_SECTION void USBD_GetSetupPacket(uint8_t *buf)
 {
     USBD_MemCopy(buf, g_usbd_SetupPacket, 8);
 }
@@ -137,7 +137,7 @@ void USBD_GetSetupPacket(uint8_t *buf)
   * @details  Parse SETUP packet and perform the corresponding action.
   *
   */
-void USBD_ProcessSetupPacket(void)
+IROM2_SECTION void USBD_ProcessSetupPacket(void)
 {
     /* Get SETUP packet from USB buffer */
     USBD_MemCopy(g_usbd_SetupPacket, (uint8_t *)USBD_BUF_BASE, 8);
@@ -174,7 +174,7 @@ void USBD_ProcessSetupPacket(void)
   * @details  Parse GetDescriptor request and perform the corresponding action.
   *
   */
-void USBD_GetDescriptor(void)
+IROM2_SECTION void USBD_GetDescriptor(void)
 {
     uint32_t u32Len;
 
@@ -247,7 +247,7 @@ void USBD_GetDescriptor(void)
   * @details  Parse standard request and perform the corresponding action.
   *
   */
-void USBD_StandardRequest(void)
+IROM2_SECTION void USBD_StandardRequest(void)
 {
     uint32_t u32Addr;
     uint32_t u32Len0 = 0;
@@ -391,7 +391,7 @@ void USBD_StandardRequest(void)
   * @details    Prepare data for Control IN transfer.
   *
   */
-void USBD_PrepareCtrlIn(uint8_t *pu8Buf, uint32_t u32Size)
+IROM2_SECTION void USBD_PrepareCtrlIn(uint8_t *pu8Buf, uint32_t u32Size)
 {
     DBG_PRINTF("Prepare Ctrl In %d\n", u32Size);
 
@@ -420,7 +420,7 @@ void USBD_PrepareCtrlIn(uint8_t *pu8Buf, uint32_t u32Size)
   * @details  This function processes the remained data of Control IN transfer.
   *
   */
-void USBD_CtrlIn(void)
+IROM2_SECTION void USBD_CtrlIn(void)
 {
     DBG_PRINTF("Ctrl In Ack. residue %d\n", g_usbd_CtrlInSize);
 
@@ -473,7 +473,7 @@ void USBD_CtrlIn(void)
   * @details  This function resets all variables for protocol and resets USB device address to 0.
   *
   */
-void USBD_SwReset(void)
+IROM2_SECTION void USBD_SwReset(void)
 {
     // Reset all variables for protocol
     g_usbd_CtrlInPointer = 0;

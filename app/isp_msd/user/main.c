@@ -9,10 +9,10 @@
 
 #include "M031Series_User.h"
 #include "massstorage.h"
-
+#include "rom.h"
 #define TRIM_INIT           (SYS_BASE+0x118)
 
-void SYS_Init(void)
+IROM2_SECTION void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
@@ -41,7 +41,7 @@ void SYS_Init(void)
     SYS_LockReg();
 }
 
-void gotoAPROM(void)
+IROM2_SECTION void gotoAPROM(void)
 {
     /* Boot from AP */
     FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
@@ -53,7 +53,7 @@ void gotoAPROM(void)
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
-int32_t main(void)
+IROM2_SECTION int32_t main(void)
 {   
     uint32_t u32TrimInit;
 

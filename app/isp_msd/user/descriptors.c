@@ -10,10 +10,10 @@
 /*!<Includes */
 #include "M031Series_User.h"
 #include "massstorage.h"
-
+#include "rom.h"
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-const uint8_t gu8DeviceDescriptor[] =
+IROM2_DATA_SECTION const uint8_t gu8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
@@ -37,7 +37,7 @@ const uint8_t gu8DeviceDescriptor[] =
 };
 
 /*!<USB Configure Descriptor */
-const uint8_t gu8ConfigDescriptor[] =
+IROM2_DATA_SECTION const uint8_t gu8ConfigDescriptor[] =
 {
     LEN_CONFIG,                                         // bLength
     DESC_CONFIG,                                        // bDescriptorType
@@ -77,7 +77,7 @@ const uint8_t gu8ConfigDescriptor[] =
 };
 
 /*!<USB Language String Descriptor */
-const uint8_t gu8StringLang[4] =
+IROM2_DATA_SECTION const uint8_t gu8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -85,7 +85,7 @@ const uint8_t gu8StringLang[4] =
 };
 
 /*!<USB Vendor String Descriptor */
-const uint8_t gu8VendorStringDesc[16] =
+IROM2_DATA_SECTION const uint8_t gu8VendorStringDesc[16] =
 {
     16,
     DESC_STRING,
@@ -93,13 +93,13 @@ const uint8_t gu8VendorStringDesc[16] =
 };
 
 
-const uint8_t *gpu8UsbString[2] =
+IROM2_DATA8P_SECTION const uint8_t *gpu8UsbString[2] =
 {
     gu8StringLang,
     gu8VendorStringDesc
 };
 
-const S_USBD_INFO_T gsInfo =
+IROM2_DATA_SECTION const S_USBD_INFO_T gsInfo =
 {
     gu8DeviceDescriptor,
     gu8ConfigDescriptor,

@@ -13,6 +13,7 @@
 #include "M031Series_User.h"
 #include "DataFlashProg.h"
 #include "massstorage.h"
+#include "rom.h"
 
 static uint8_t g_u8LockBit = 1;
 
@@ -22,7 +23,7 @@ extern uint32_t g_u32u32StorageSize;
 /* Macro, type and constant definitions                                                                    */
 /*---------------------------------------------------------------------------------------------------------*/
 
-uint8_t u8FormatData[62] =
+IROM2_DATA_SECTION uint8_t u8FormatData[62] =
 {
     0xEB, 0x3C, 0x90, 0x4D, 0x53, 0x44, 0x4F, 0x53,
     0x35, 0x2E, 0x30, 0x00, 0x02, 0x01, 0x02, 0x00,
@@ -34,7 +35,7 @@ uint8_t u8FormatData[62] =
     0x54, 0x31, 0x32, 0x20, 0x20, 0x20
 };
 
-uint8_t u8RootDirData[92] =
+IROM2_DATA_SECTION uint8_t u8RootDirData[92] =
 {
     0x42, 0x20, 0x00, 0x49, 0x00, 0x6E, 0x00, 0x66,
     0x00, 0x6F, 0x00, 0x0F, 0x00, 0x72, 0x72, 0x00,
@@ -51,7 +52,7 @@ uint8_t u8RootDirData[92] =
 };
 
 
-void DataFlashRead(uint32_t u32Addr, uint32_t * u32Buf)
+IROM2_SECTION void DataFlashRead(uint32_t u32Addr, uint32_t * u32Buf)
 {
     USBD_MemReset((uint8_t *)u32Buf, STORAGE_BUFFER_SIZE);
 
@@ -76,7 +77,7 @@ void DataFlashRead(uint32_t u32Addr, uint32_t * u32Buf)
 }
 
 
-void FMC_ISP(uint32_t u32Cmd, uint32_t u32Addr, uint32_t u32Data)
+IROM2_SECTION void FMC_ISP(uint32_t u32Cmd, uint32_t u32Addr, uint32_t u32Data)
 {
     FMC->ISPCMD = u32Cmd;
     FMC->ISPADDR = u32Addr;
@@ -94,7 +95,7 @@ void FMC_ISP(uint32_t u32Cmd, uint32_t u32Addr, uint32_t u32Data)
 }
 
 
-uint32_t FMC_Init(void)
+IROM2_SECTION uint32_t FMC_Init(void)
 {
     uint32_t u32APSize;
 
@@ -117,7 +118,7 @@ uint32_t FMC_Init(void)
 }
 
 
-void DataFlashProgramPage(uint32_t u32StartAddr, uint32_t * u32Buf)
+IROM2_SECTION void DataFlashProgramPage(uint32_t u32StartAddr, uint32_t * u32Buf)
 {
     uint32_t i;
 
@@ -128,7 +129,7 @@ void DataFlashProgramPage(uint32_t u32StartAddr, uint32_t * u32Buf)
 }
 
 
-void DataFlashWrite(uint32_t u32Addr, uint32_t * u32Buf)
+IROM2_SECTION void DataFlashWrite(uint32_t u32Addr, uint32_t * u32Buf)
 {
     /* This is low level write function of USB Mass Storage */
     if ((u32Addr >= DATA_SEC_ADDR) && (u32Addr < g_u32u32StorageSize))

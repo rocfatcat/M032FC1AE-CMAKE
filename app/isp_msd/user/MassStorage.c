@@ -10,7 +10,7 @@
 /*!<Includes */
 #include "M031Series_User.h"
 #include "massstorage.h"
-
+#include "rom.h"
 #if 0
 #define DBG_PRINTF      printf
 #else
@@ -38,14 +38,14 @@ uint32_t g_u32BytesInStorageBuf;
 uint32_t g_u32BulkBuf0, g_u32BulkBuf1;
 
 /* CBW/CSW variables */
-struct CBW g_sCBW;
-struct CSW g_sCSW;
+IROM2_DATA_SECTION struct CBW g_sCBW;
+IROM2_DATA_SECTION struct CSW g_sCSW;
 
-uint32_t MassBlock[MASS_BUFFER_SIZE / 4];
-uint32_t Storage_Block[STORAGE_BUFFER_SIZE / 4];
+IROM2_DATA_SECTION uint32_t MassBlock[MASS_BUFFER_SIZE / 4];
+IROM2_DATA_SECTION uint32_t Storage_Block[STORAGE_BUFFER_SIZE / 4];
 
 /*--------------------------------------------------------------------------*/
-uint8_t g_au8InquiryID[36] =
+IROM2_DATA_SECTION uint8_t g_au8InquiryID[36] =
 {
     0x00,                   /* Peripheral Device Type */
     0x80,                   /* RMB */
@@ -174,13 +174,13 @@ void USBD_IRQHandler(void)
 }
 
 
-void USBD_MSC_Stall(void)
+IROM2_SECTION void USBD_MSC_Stall(void)
 {
     USBD_SET_EP_STALL(EP2);
     USBD_SET_EP_STALL(EP3);
 }
 
-void MSC_Init(void)
+IROM2_SECTION void MSC_Init(void)
 {
     /* Init setup packet buffer */
     /* Buffer range for setup packet -> [0 ~ 0x7] */
@@ -221,7 +221,7 @@ void MSC_Init(void)
     g_TotalSectors = g_u32u32StorageSize / UDC_SECTOR_SIZE;
 }
 
-void MSC_ClassRequest(void)
+IROM2_SECTION void MSC_ClassRequest(void)
 {
     uint8_t buf[8];
     uint8_t u8Temp;
@@ -286,7 +286,7 @@ void MSC_ClassRequest(void)
 }
 
 
-void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
+IROM2_SECTION void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
 {
     uint32_t tmp = g_TotalSectors;
     uint8_t *pu8Desc;
@@ -335,7 +335,7 @@ void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
 }
 
 
-void MSC_Read(uint8_t u8IsTrig)
+IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 {
     uint32_t u32Len;
     uint32_t u32Buf;
@@ -396,7 +396,7 @@ void MSC_Read(uint8_t u8IsTrig)
 }
 
 
-void MSC_ModeSense10(void)
+IROM2_SECTION void MSC_ModeSense10(void)
 {
     uint8_t NumHead, NumSector;
     uint16_t NumCyl = 0;
@@ -429,7 +429,7 @@ void MSC_ModeSense10(void)
     }
 }
 
-void MSC_Write(void)
+IROM2_SECTION void MSC_Write(void)
 {
     uint32_t lba, len;
     uint32_t u32Bufa, u32Bufb;
@@ -483,7 +483,7 @@ void MSC_Write(void)
     }
 }
 
-void MSC_ProcessCmd(void)
+IROM2_SECTION void MSC_ProcessCmd(void)
 {
     uint32_t u32Buf;
     int32_t i;
@@ -705,7 +705,7 @@ void MSC_ProcessCmd(void)
 }
 
 
-void MSC_AckCmd(void)
+IROM2_SECTION void MSC_AckCmd(void)
 {
     /* Bulk IN */
     if(g_u8BulkState == BULK_CSW)
@@ -806,7 +806,7 @@ void MSC_AckCmd(void)
 }
 
 
-void MSC_SetConfig(void)
+IROM2_SECTION void MSC_SetConfig(void)
 {
     /* Clear stall status and ready */
     USBD->EP[2].CFGP = 1;
