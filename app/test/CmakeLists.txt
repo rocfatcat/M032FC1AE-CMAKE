@@ -3,6 +3,12 @@ set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
+
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
@@ -14,7 +20,7 @@ add_executable(test
     ${M031BSP_DIR}/Library/StdDriver/src/clk.c
     # ${M031BSP_DIR}/Library/StdDriver/src/crc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/ebi.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/fmc.c
+    ${M031BSP_DIR}/Library/StdDriver/src/fmc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/gpio.c
     # ${M031BSP_DIR}/Library/StdDriver/src/i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
@@ -25,7 +31,7 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -42,6 +48,7 @@ add_executable(test
 target_include_directories(test
     PRIVATE
         ${M031BSP_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/user
 )
 # toolchain 檔在命令列用 -DCMAKE_TOOLCHAIN_FILE
 # ex: cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-none-eabi.cmake ..

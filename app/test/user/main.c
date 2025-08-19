@@ -7,11 +7,13 @@
  * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
+#include "M031Series_User.h"
+#include "massstorage.h"
 #include "NuMicro.h"
-#define IROM2_SECTION //__attribute__((section(".irom2_text"), used))
+#include "rom.h"
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
-
-void SYS_Init(void)
+#define TRIM_INIT           (SYS_BASE+0x118)
+IROM2_SECTION void SYS_Init(void)
 {
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -30,6 +32,12 @@ void SYS_Init(void)
 
     /* Switch UART0 clock source to HIRC */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
+    
+    /* Switch USB clock source to HIRC & USB Clock = HIRC / 1 */
+    CLK_SetModuleClock(USBD_MODULE, CLK_CLKSEL0_USBDSEL_HIRC, CLK_CLKDIV0_USB(1));
+
+    /* Enable USB clock */
+    CLK_EnableModuleClock(USBD_MODULE);
 
     /* Update System Core Clock */
     SystemCoreClockUpdate();
@@ -50,40 +58,106 @@ void SYS_Init(void)
  * "Hello World", users may need to do extra system configuration based on their system design.
  */
 
-// #define IROM2_DATA_SECTION __attribute__((section(".rodata_irom2"), used))
-#define IROM2_DATA_SECTION __attribute__((section(".irom2_text"), used))
 
-IROM2_DATA_SECTION uint8_t const pu8TxBuff[] = {'H', 'e', 'l', 'l','o', ' ', 'W', 'o', 'r', 'l', 'd', '!', '\r', '\n','\n','\n'};
-IROM2_DATA_SECTION uint32_t const u32WriteBytes = sizeof(pu8TxBuff) - 1;
-
-
+IROM2_SECTION void gotoAPROM(void)
+{
+    /* Boot from AP */
+    FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
+    NVIC_SystemReset();
+    //SYS->IPRST0 = SYS_IPRST0_CPURST_Msk;
+    while(1);
+}
+IROM2_DATA_SECTION const uint8_t msg1[] = {'H','1','\r','\n'};
+IROM2_DATA_SECTION const uint8_t msg2[] = {'H','2','\r','\n'};
 int main()
 {
-    SYS_Init();
+    uint32_t u32TrimInit;
 
+    /* The code should boot from LDROM: check the boot setting */
+    
+    /* Check if GPA.0 is low */
+    // if (PE8 != 0)
+    if( 0 )
+    {
+        /* Boot from AP */
+        gotoAPROM();
+    }
+
+    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
+    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
+    
+    SYS_Init();
     /* Init UART0 to 115200-8n1 for print message */
     UART_Open(UART0, 115200);
+    UART_Write(UART0, (uint8_t*)msg1, 4);
+    USBD_Open(&gsInfo);
+    UART_Write(UART0, (uint8_t*)msg2, 4);
+    /* Endpoint configuration */
+    MSC_Init();
 
-    /* Connect UART to PC, and open a terminal tool to receive following message */
-    // printf("Hello World\n");
+    /* Start of USBD_Start() */
+    CLK_SysTickDelay(100000);
 
-    uint32_t u32Count = 0;
-    uint8_t pu8TxBuf[30] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    // uint32_t u32WriteBytes = sizeof(pu8TxBuf) - 1;
-    for (uint32_t i = 0; i < 15; i++)
-    {
-        pu8TxBuf[i] = pu8TxBuff[i];
-    }
-    u32Count = 0;
+
+    /* Disable software-disconnect function */
+    USBD->SE0 = 0;
+
+    /* Clear USB-related interrupts before enable interrupt */
+    USBD->INTSTS = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
+
+    /* Enable USB-related interrupts. */
+    USBD->INTEN = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
+    /* End of USBD_Start() */
+
+    NVIC_EnableIRQ(USBD_IRQn);
+
+    /* Backup default trim */
+    u32TrimInit = M32(TRIM_INIT);
+
+    /* Clear SOF */
+    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
     while(1)
     {
-        /* Print out a message every 1000 ms */
-        // if(u32Count++ >= 1000)
-        // {
-            // u32Count = 0;
-            // printf("Hello World\n");
-            UART_Write(UART0, pu8TxBuf, 14);
-        // }
+       /* Start USB trim if it is not enabled. */
+        if((SYS->HIRCTRIMCTL & SYS_HIRCTRIMCTL_FREQSEL_Msk) != 1)
+        {
+            /* Start USB trim only when SOF */
+            if(USBD->INTSTS & USBD_INTSTS_SOFIF_Msk)
+            {
+                /* Clear SOF */
+                USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+
+                /* Re-enable crystal-less */
+                SYS->HIRCTRIMCTL = 0x01;
+                SYS->HIRCTRIMCTL |= SYS_HIRCTRIMCTL_REFCKSEL_Msk;
+            }
+        }
+
+        /* Disable USB Trim when error */
+        if(SYS->HIRCTRIMSTS & (SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk))
+        {
+            /* Init TRIM */
+            M32(TRIM_INIT) = u32TrimInit;
+
+            /* Disable crystal-less */
+            SYS->HIRCTRIMCTL = 0;
+
+            /* Clear error flags */
+            SYS->HIRCTRIMSTS = SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk;
+
+            /* Clear SOF */
+            USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+        }			
+			
+        MSC_ProcessCmd();
+
+        // if (PE8)
+        if( 0)
+        {   
+            /* Reset */
+            gotoAPROM();
+        }   
+
     }
 }
 /* memcpy: 將 src 的前 n 個 byte 複製到 dest */
@@ -97,5 +171,10 @@ void *memcpy(void *dest, const void *src, size_t n)
     }
 
     return dest;
+}
+void *memset(void *s, int c, size_t n) {
+    unsigned char *p = s;
+    while (n--) *p++ = (unsigned char)c;
+    return s;
 }
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
