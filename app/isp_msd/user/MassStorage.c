@@ -11,6 +11,7 @@
 #include "M031Series_User.h"
 #include "massstorage.h"
 #include "rom.h"
+#include "stdio.h"
 #if 0
 #define DBG_PRINTF      printf
 #else
@@ -143,6 +144,7 @@ void USBD_IRQHandler(void)
             /* Clear event flag */
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP2);
             /* Bulk IN */
+            printf("ACK 1\r\n");
             MSC_AckCmd();
         }
 
@@ -339,7 +341,11 @@ IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 {
     uint32_t u32Len;
     uint32_t u32Buf;
-
+    printf("MSC_Read u8IsTrig = %d\n", u8IsTrig);
+    printf("g_u32Length = %d\n", g_u32Length);
+    printf("g_u32BytesInStorageBuf = %d\n", g_u32BytesInStorageBuf);
+    printf("g_u32Address = %x\n", g_u32Address);
+    printf("g_u32LbaAddress = %x\n", g_u32LbaAddress);
     if(USBD_GET_EP_BUF_ADDR(EP2) == g_u32BulkBuf1)
         u32Buf = g_u32BulkBuf0;
     else
@@ -404,7 +410,7 @@ IROM2_SECTION void MSC_ModeSense10(void)
     /* Clear the command buffer */
     *((uint32_t *)MassCMD_BUF) = 0;
     *((uint32_t *)MassCMD_BUF + 1) = 0;
-
+    printf("MSC_ModeSense10 au8Data = %x\n", g_sCBW.au8Data[0]);
     switch(g_sCBW.au8Data[0])
     {
     case 0x3F:
@@ -479,6 +485,7 @@ IROM2_SECTION void MSC_Write(void)
         }
 
         g_u8BulkState = BULK_IN;
+        printf("ACK 2\r\n");
         MSC_AckCmd();
     }
 }
@@ -515,6 +522,7 @@ IROM2_SECTION void MSC_ProcessCmd(void)
         g_sCSW.dCSWTag = g_sCBW.dCBWTag;
 
         /* Parse Op-Code of CBW */
+        printf("MSC_ProcessCmd CBW OpCode = %x\n", g_sCBW.u8OPCode);
         switch(g_sCBW.u8OPCode)
         {
         case UFI_VERIFY_10:
@@ -522,6 +530,7 @@ IROM2_SECTION void MSC_ProcessCmd(void)
         {
             DBG_PRINTF("Test Unit\n");
             g_u8BulkState = BULK_IN;
+            printf("ACK 3\r\n");
             MSC_AckCmd();
             return;
         }
@@ -724,7 +733,7 @@ IROM2_SECTION void MSC_AckCmd(void)
 
         g_sCSW.dCSWDataResidue = 0;
         g_sCSW.bCSWStatus = 0;
-
+        printf("MSC_AckCmd u8OPCode = %x\n", g_sCBW.u8OPCode);
         switch(g_sCBW.u8OPCode)
         {
         case UFI_READ_FORMAT_CAPACITY:
@@ -784,6 +793,8 @@ IROM2_SECTION void MSC_AckCmd(void)
             break;
         }
         }
+
+        printf("MSC_AckCmd dCSWDataResidue = %x, bCSWStatus = %x g_u32BulkBuf1 = %x\n", g_sCSW.dCSWDataResidue, g_sCSW.bCSWStatus, g_u32BulkBuf1);
 
         /* Return the CSW */
         USBD_SET_EP_BUF_ADDR(EP2, g_u32BulkBuf1);
