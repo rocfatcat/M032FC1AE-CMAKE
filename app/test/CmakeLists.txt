@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
     ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
 
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
@@ -59,14 +57,13 @@ target_include_directories(test
 
 
 # 自動套用所有 linker 選項 + script
-#configure_target_linking(test)
+# configure_target_linking(test)
 # target_link_options(test PRIVATE -Wl,-N)
 
 target_link_options(test PRIVATE
     "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
     "-Xlinker" "--gc-sections"
-    "-Wl,-Map=test.map"
-    # "-Wl,-N"
+    "-Wl,-Map=test.map" 
     # "-nostartfiles"
     # "-nostdlib"
     "--specs=nano.specs" 

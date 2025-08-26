@@ -107,22 +107,8 @@ IROM2_SECTION void USBProcess(uint32_t u32TrimInit)
         }	
 }
 
-int main()
+IROM2_SECTION void Func_Config(uint32_t u32TrimInit)
 {
-    uint32_t u32TrimInit;
-
-    /* The code should boot from LDROM: check the boot setting */
-    
-    /* Check if GPA.0 is low */
-    // if (PE8 != 0)
-    if( 0 )
-    {
-        /* Boot from AP */
-        gotoAPROM();
-    }
-
-
-    
     SYS_Init();
     /* Init UART0 to 115200-8n1 for print message */
     // UART_Open(UART0, 115200);
@@ -151,11 +137,29 @@ int main()
 
     /* Clear SOF */
     USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+}
+
+int main()
+{
+    uint32_t u32TrimInit;
+
+    /* The code should boot from LDROM: check the boot setting */
+    
+    /* Check if GPA.0 is low */
+    // if (PE8 != 0)
+    if( 0 )
+    {
+        /* Boot from AP */
+        gotoAPROM();
+    }
+
+    Func_Config(u32TrimInit);
+    
+    
     while(1)
     {
         USBProcess(u32TrimInit);
-		
-			
+				
         MSC_ProcessCmd();
 
         // if (PE8)
