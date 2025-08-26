@@ -353,6 +353,8 @@ IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 
     if (!u8IsTrig)
     {
+        printf("u32Buf = %x\n", u32Buf);
+        printf("g_u8Size = %x\n", g_u8Size);
         USBD_SET_EP_BUF_ADDR(EP2, u32Buf);
 
         /* Trigger to send out the data packet */
@@ -744,9 +746,11 @@ IROM2_SECTION void MSC_AckCmd(void)
         {
             if((g_u32Length > 0) && (g_sCBW.u8OPCode != UFI_INQUIRY))
             {
+                printf("MSC_AckCmd MSC_Read(0) g_u32Length = %d\n",g_u32Length);
                 MSC_Read(0);
                 return;
             }
+            printf("MSC_AckCmd MSC_Read(0) g_u32Length = %d u32len = %d\n",g_u32Length, u32len);
 
             if (u32len > 36)
                 g_sCSW.dCSWDataResidue = u32len - 36;

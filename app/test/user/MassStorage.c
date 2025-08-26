@@ -46,7 +46,7 @@ uint32_t MassBlock[MASS_BUFFER_SIZE / 4];
 uint32_t Storage_Block[STORAGE_BUFFER_SIZE / 4];
 
 /*--------------------------------------------------------------------------*/
-IROM2_DATA_SECTION const uint8_t g_au8InquiryID[36] =
+uint8_t g_au8InquiryID[36] =
 {
     0x00,                   /* Peripheral Device Type */
     0x80,                   /* RMB */
@@ -76,7 +76,6 @@ static uint8_t g_au8ModePage_3F[64] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x1C, 0x06, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00
 };
-
 
 void USBD_IRQHandler(void)
 {
@@ -286,23 +285,15 @@ IROM2_SECTION void MSC_ClassRequest(void)
     }
 }
 
-IROM2_DATA_SECTION const uint8_t msg[] = {'D','-','R','C','P','\r','\n'};
-IROM2_DATA_SECTION const uint8_t msg3[] = {'D','-','R','C','P','E','\r','\n'};
-IROM2_DATA_SECTION const uint8_t msg4[] = {'D','-','O','P','C','D','\r','\n'};
 
 IROM2_SECTION void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
 {
-    UART_Write(UART0, (uint8_t*)msg, 7);
     uint32_t tmp = g_TotalSectors;
     uint8_t *pu8Desc;
 
     pu8Desc = (uint8_t *)MassCMD_BUF;
 
     USBD_MemReset(pu8Desc, 36);
-    UART_Write(UART0, (uint8_t*)msg4, 8);
-    UART_WriteHex(UART0, u8OPCode, 8);
-    UART_WriteHex(UART0, u32Offset, 8);
-    UART_WriteHex(UART0, tmp, 8);
 
     if (u8OPCode)
     {
@@ -341,25 +332,11 @@ IROM2_SECTION void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
         /* Block Length. Fixed to be 512 (MSB first) */
         pu8Desc[18] = 0x02;
     }
-    UART_Write(UART0, (uint8_t*)msg3, 8);
 
 }
 
-IROM2_DATA_SECTION const uint8_t msgMSCRead[] = {'M','S','C',' ','R','e','a','d','\r','\n'};
 IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 {
-    UART_Write(UART0, (uint8_t*)msgMSCRead, 10);
-    UART_WriteHex(UART0, u8IsTrig, 8);
-    UART_WriteHex(UART0, g_u32Length, 8);
-    UART_WriteHex(UART0, g_u32BytesInStorageBuf, 8);
-    UART_WriteHex(UART0, g_u32Address, 8);
-    UART_WriteHex(UART0, g_u32LbaAddress, 8);
-
-    // printf("MSC_Read u8IsTrig = %d\n", u8IsTrig);
-    // printf("g_u32Length = %d\n", g_u32Length);
-    // printf("g_u32BytesInStorageBuf = %d\n", g_u32BytesInStorageBuf);
-    // printf("g_u32Address = %x\n", g_u32Address);
-    // printf("g_u32LbaAddress = %x\n", g_u32LbaAddress);
     uint32_t u32Len;
     uint32_t u32Buf;
 
@@ -418,17 +395,15 @@ IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
         USBD_SET_PAYLOAD_LEN(EP2, 0);
 }
 
-IROM2_DATA_SECTION const uint8_t modeSense10[] = {'M','o','d','e',' ','S','e','n','s','e','1','0','\r','\n'};
-
 IROM2_SECTION void MSC_ModeSense10(void)
 {
     uint8_t NumHead, NumSector;
     uint16_t NumCyl = 0;
-    UART_Write(UART0, (uint8_t*)modeSense10, 14);
+
     /* Clear the command buffer */
     *((uint32_t *)MassCMD_BUF) = 0;
     *((uint32_t *)MassCMD_BUF + 1) = 0;
-    UART_WriteHex(UART0, g_sCBW.au8Data[0], 8);
+
     switch(g_sCBW.au8Data[0])
     {
     case 0x3F:
@@ -506,7 +481,7 @@ IROM2_SECTION void MSC_Write(void)
         MSC_AckCmd();
     }
 }
-IROM2_DATA_SECTION const uint8_t msgOPCode[] = {'D','-','M','S','D',' ','P','R','O','C','S','S','\r','\n'};
+
 IROM2_SECTION void MSC_ProcessCmd(void)
 {
     uint32_t u32Buf;
@@ -537,8 +512,7 @@ IROM2_SECTION void MSC_ProcessCmd(void)
 
         /* Prepare to echo the tag from CBW to CSW */
         g_sCSW.dCSWTag = g_sCBW.dCBWTag;
-        UART_Write(UART0, (uint8_t*)msgOPCode, 14);
-        UART_WriteHex(UART0, g_sCBW.u8OPCode,8);
+
         /* Parse Op-Code of CBW */
         switch(g_sCBW.u8OPCode)
         {
@@ -729,8 +703,6 @@ IROM2_SECTION void MSC_ProcessCmd(void)
     }
 }
 
-IROM2_DATA_SECTION const uint8_t msgAck[] = {'D','-','M','S','C','A','C','K','\r','\n'};
-IROM2_DATA_SECTION const uint8_t msgAck2[] = {'D','-','M','S','C','A','C','K','-','E','N','\r','\n'};
 IROM2_SECTION void MSC_AckCmd(void)
 {
     /* Bulk IN */
@@ -750,8 +722,7 @@ IROM2_SECTION void MSC_AckCmd(void)
 
         g_sCSW.dCSWDataResidue = 0;
         g_sCSW.bCSWStatus = 0;
-        UART_Write(UART0, (uint8_t*)msgAck, 10);
-        UART_WriteHex(UART0, g_sCBW.u8OPCode, 8);
+ 
         switch(g_sCBW.u8OPCode)
         {
         case UFI_READ_FORMAT_CAPACITY:
@@ -811,10 +782,7 @@ IROM2_SECTION void MSC_AckCmd(void)
             break;
         }
         }
-        UART_Write(UART0, (uint8_t*)msgAck2, 13);
-        UART_WriteHex(UART0, g_sCSW.dCSWDataResidue, 8);
-        UART_WriteHex(UART0, g_sCSW.bCSWStatus, 8);
-        UART_WriteHex(UART0, g_u32BulkBuf1, 8);
+
         /* Return the CSW */
         USBD_SET_EP_BUF_ADDR(EP2, g_u32BulkBuf1);
 
