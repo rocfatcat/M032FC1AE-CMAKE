@@ -82,10 +82,6 @@ SECTIONS
     } > IROM1
     __exidx_end = .;
 
-
-
-
-    
 	/* To copy multiple ROM to RAM sections,
 	 * uncomment .copy.table section and,
 	 * define __STARTUP_COPY_MULTIPLE in startup_ARMCMx.S */

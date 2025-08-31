@@ -21,7 +21,7 @@ add_executable(template
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c

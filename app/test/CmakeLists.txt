@@ -3,7 +3,7 @@ set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
@@ -19,7 +19,7 @@ add_executable(test
     ${M031BSP_DIR}/Library/StdDriver/src/clk.c
     # ${M031BSP_DIR}/Library/StdDriver/src/crc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/ebi.c
-    ${M031BSP_DIR}/Library/StdDriver/src/fmc.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/fmc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/gpio.c
     # ${M031BSP_DIR}/Library/StdDriver/src/i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
@@ -55,6 +55,9 @@ target_include_directories(test
 # 可選：自定 linker script，否則使用預設值
 # set_linker_script(IAP_Bootload "${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm.ld")
 
+set(DESCRIPTORS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/descriptors.c.o")
+    message(STATUS "Object file: ${DESCRIPTORS_OBJ}")
+    message(STATUS "Object file: ${M031BSP_DIR}")
 
 # 自動套用所有 linker 選項 + script
 # configure_target_linking(test)
@@ -70,14 +73,16 @@ target_link_options(test PRIVATE
     #"--specs=nosys.specs"
 )
 # configure_target_linking(test)
-#finalize_output(test)
+# finalize_output(test)
 
 # 生成 IROM1.bin
 add_custom_command(
     TARGET test POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary
-            --only-section=.text
-            --only-section=.rodata
+            --remove-section=.irom2_text
+            --remove-section=.rodata_irom2
+            --remove-section=.rodata_ptr8
+            --remove-section=.rodata_ptr32
             "$<TARGET_FILE:test>"
             "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
     COMMENT "Generating LDROM.bin"

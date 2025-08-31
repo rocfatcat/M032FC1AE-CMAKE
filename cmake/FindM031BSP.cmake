@@ -27,4 +27,4 @@ set(M031BSP_INCLUDE_DIR "${M031BSP_DIR}/Library/StdDriver/inc"
                         CACHE PATH "M031 BSP include directories")
 
 # 設定預設 linker script，只需設定一次
-set(DEFAULT_LINKER_SCRIPT ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/gcc_arm.ld)
+set(DEFAULT_LINKER_SCRIPT ${M031BSP_DIR}/Library/Device/Nuvoton/M031/Source/GCC/gcc_arm_32k.ld)
