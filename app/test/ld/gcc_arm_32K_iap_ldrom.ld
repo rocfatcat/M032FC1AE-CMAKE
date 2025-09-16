@@ -6,7 +6,7 @@ MEMORY
 }
 
 /* GROUP(libgcc.a libc.a libm.a libnosys.a) */
-GROUP(libgcc.a)
+GROUP(libgcc.a libc.a libm.a libnosys.a)
 
 ENTRY(Reset_Handler)
 
@@ -82,10 +82,6 @@ SECTIONS
     } > IROM1
     __exidx_end = .;
 
-
-
-
-    
 	/* To copy multiple ROM to RAM sections,
 	 * uncomment .copy.table section and,
 	 * define __STARTUP_COPY_MULTIPLE in startup_ARMCMx.S */

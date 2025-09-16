@@ -11,9 +11,8 @@
 #include "massstorage.h"
 #include "NuMicro.h"
 #include "rom.h"
-void UART_Open(UART_T *uart, uint32_t u32baudrate);
 #define TRIM_INIT           (SYS_BASE+0x118)
-IROM2_SECTION void SYS_Init(void)
+IROM2_SECTION int SYS_Init(void)
 {
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -21,36 +20,36 @@ IROM2_SECTION void SYS_Init(void)
     /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
     FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
     
-    /* Enable HIRC clock (Internal RC 48MHz) */
-    CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
-    
-    /* Wait for HIRC clock ready */
-    CLK_WaitClockReady(CLK_STATUS_HIRCSTB_Msk);
-    
-    /* Select HCLK clock source as HIRC and HCLK source divider as 1 */
-    CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_HIRC, CLK_CLKDIV0_HCLK(1));
-    
-    /* Enable UART0 clock */
-    CLK_EnableModuleClock(UART0_MODULE);
-    
-    /* Switch UART0 clock source to HIRC */
-    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
-    
-    /* Switch USB clock source to HIRC & USB Clock = HIRC / 1 */
-    CLK_SetModuleClock(USBD_MODULE, CLK_CLKSEL0_USBDSEL_HIRC, CLK_CLKDIV0_USB(1));
-    
-    /* Enable USB clock */
-    CLK_EnableModuleClock(USBD_MODULE);
-    
-    /* Update System Core Clock */
-    SystemCoreClockUpdate();
-    
-    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
-    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
-    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
-    
+    /* Enable Internal RC 48MHz clock */
+    CLK->PWRCTL = (CLK_PWRCTL_HIRCEN_Msk);
+
     /* Set Flash Access Delay */
     FMC->FTCTL |= FMC_FTCTL_FOM_Msk;
+
+    /* Set core clock */
+    /* Switch HCLK clock source to HIRC */
+    CLK->CLKSEL0 = (CLK->CLKSEL0 & ~CLK_CLKSEL0_HCLKSEL_Msk) | CLK_CLKSEL0_HCLKSEL_HIRC;
+    /* Switch USB clock source to HIRC */
+    CLK->CLKSEL0 = (CLK->CLKSEL0 & ~CLK_CLKSEL0_USBDSEL_Msk) | CLK_CLKSEL0_USBDSEL_HIRC;
+    /* USB Clock = HIRC / 1 */
+    CLK->CLKDIV0 = CLK->CLKDIV0 & ~CLK_CLKDIV0_USBDIV_Msk;
+
+    /* Enable module clock */
+    CLK->APBCLK0 |= CLK_APBCLK0_USBDCKEN_Msk;
+
+    /* Enable UART0 clock */
+    CLK_EnableModuleClock(UART0_MODULE);
+
+    /* Switch UART0 clock source to HIRC */
+    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
+
+    /* Update System Core Clock */
+    SystemCoreClockUpdate();
+
+    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
+    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
+                    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
+
     /* Lock protected registers */
     SYS_LockReg();
 }
@@ -73,8 +72,58 @@ IROM2_SECTION void gotoAPROM(void)
     while(1);
 }
 
-IROM2_SECTION void USBProcess(uint32_t u32TrimInit)
-{
+/*---------------------------------------------------------------------------------------------------------*/
+/*  Main Function                                                                                          */
+/*---------------------------------------------------------------------------------------------------------*/
+IROM2_SECTION int32_t main(void)
+{   
+    uint32_t u32TrimInit;
+
+    /* The code should boot from LDROM: check the boot setting */
+    
+    /* Check if GPA.0 is low */
+    if (PE8 != 0)
+    {
+        /* Boot from AP */
+        gotoAPROM();
+    }
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
+    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
+    
+    SYS_Init();
+    UART_Open(UART0, 115200);
+    UART_Write(UART0, "Hello World\n", 12);
+    USBD_Open(&gsInfo);
+
+    /* Endpoint configuration */
+    MSC_Init();
+
+    /* Start of USBD_Start() */
+    CLK_SysTickDelay(100000);
+
+    /* Disable software-disconnect function */
+    USBD->SE0 = 0;
+
+    /* Clear USB-related interrupts before enable interrupt */
+    USBD->INTSTS = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
+
+    /* Enable USB-related interrupts. */
+    USBD->INTEN = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
+    /* End of USBD_Start() */
+
+    NVIC_EnableIRQ(USBD_IRQn);
+
+    /* Backup default trim */
+    u32TrimInit = M32(TRIM_INIT);
+
+    /* Clear SOF */
+    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+    while(1)
+    {
        /* Start USB trim if it is not enabled. */
         if((SYS->HIRCTRIMCTL & SYS_HIRCTRIMCTL_FREQSEL_Msk) != 1)
         {
@@ -104,84 +153,14 @@ IROM2_SECTION void USBProcess(uint32_t u32TrimInit)
 
             /* Clear SOF */
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-        }	
-}
-
-int main()
-{
-    uint32_t u32TrimInit;
-
-    /* The code should boot from LDROM: check the boot setting */
-    
-    /* Check if GPA.0 is low */
-    // if (PE8 != 0)
-    if( 0 )
-    {
-        /* Boot from AP */
-        gotoAPROM();
-    }
-
-
-    
-    SYS_Init();
-    /* Init UART0 to 115200-8n1 for print message */
-    // UART_Open(UART0, 115200);
-    USBD_Open(&gsInfo);
-    /* Endpoint configuration */
-    MSC_Init();
-
-    /* Start of USBD_Start() */
-    CLK_SysTickDelay(100000);
-
-
-    /* Disable software-disconnect function */
-    USBD->SE0 = 0;
-
-    /* Clear USB-related interrupts before enable interrupt */
-    USBD->INTSTS = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-
-    /* Enable USB-related interrupts. */
-    USBD->INTEN = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-    /* End of USBD_Start() */
-
-    NVIC_EnableIRQ(USBD_IRQn);
-
-    /* Backup default trim */
-    u32TrimInit = M32(TRIM_INIT);
-
-    /* Clear SOF */
-    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-    while(1)
-    {
-        USBProcess(u32TrimInit);
-		
+        }			
 			
         MSC_ProcessCmd();
 
-        // if (PE8)
-        if( 0)
+        if (PE8)
         {   
             /* Reset */
             gotoAPROM();
-        }   
-
+        }
     }
 }
-/* memcpy: 將 src 的前 n 個 byte 複製到 dest */
-// void *memcpy(void *dest, const void *src, size_t n)
-// {
-//     unsigned char *d = (unsigned char *)dest;
-//     const unsigned char *s = (const unsigned char *)src;
-
-//     while (n--) {
-//         *d++ = *s++;
-//     }
-
-//     return dest;
-// }
-// void *memset(void *s, int c, size_t n) {
-//     unsigned char *p = s;
-//     while (n--) *p++ = (unsigned char)c;
-//     return s;
-// }
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
