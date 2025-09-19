@@ -4,7 +4,7 @@
  * $Revision: 11 $
  * $Date: 25/09/16 10:00a $
  * @brief    Configure SPI0 as Master mode and demonstrate how to read JEDEC ID
- *           from an off-chip SPI Flash.
+ *           from an off-chip SPI Flash in a loop.
  *
  * SPDX-License-Identifier: Apache-2.0
  * @copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define SPI_CLK_FREQ    2000000
+#define SPI_CLK_FREQ    10000000
 
 /* Function prototype declaration */
 void SYS_Init(void);
@@ -42,7 +42,7 @@ int main(void)
 
     printf("\n\n");
     printf("+----------------------------------------------------------------------+\n");
-    printf("|               SPI Master Mode Sample Code to Read JEDEC ID           |\n");
+    printf("|           SPI Master Mode Sample Code to Read JEDEC ID (Loop)        |\n");
     printf("+----------------------------------------------------------------------+\n");
     printf("\n");
     printf("Configure SPI0 as a master.\n");
@@ -54,44 +54,44 @@ int main(void)
     printf("    UART0_RXD(PF.2)\n    UART0_TXD(PF.3)\n\n");
     printf("Reading JEDEC ID from SPI flash...\n");
 
-    /* Set PA.3 low to select the slave */
-    PA3 = 0;
-
-    /* Clear TX/RX FIFO */
-    SPI_ClearTxFIFO(SPI0);
-    SPI_ClearRxFIFO(SPI0);
-
-    /* Send command 0x9F */
-    SPI_WRITE_TX(SPI0, 0x9F);
-    /* Wait for transfer finish */
-    while(SPI_IS_BUSY(SPI0));
-    /* Read dummy byte */
-    SPI_READ_RX(SPI0);
-
-    /* Read 3 bytes ID */
-    for(u32DataCount = 0; u32DataCount < 3; u32DataCount++)
+    while(1)
     {
-        SPI_WRITE_TX(SPI0, 0x00);
+        /* Set PA.3 low to select the slave */
+        PA3 = 0;
+
+        /* Clear TX/RX FIFO */
+        SPI_ClearTxFIFO(SPI0);
+        SPI_ClearRxFIFO(SPI0);
+
+        /* Send command 0x9F */
+        SPI_WRITE_TX(SPI0, 0x9F);
+        /* Wait for transfer finish */
         while(SPI_IS_BUSY(SPI0));
-        u8RxData[u32DataCount] = SPI_READ_RX(SPI0);
+        /* Read dummy byte */
+        SPI_READ_RX(SPI0);
+
+        /* Read 3 bytes ID */
+        for(u32DataCount = 0; u32DataCount < 3; u32DataCount++)
+        {
+            SPI_WRITE_TX(SPI0, 0xFF);
+            while(SPI_IS_BUSY(SPI0));
+            u8RxData[u32DataCount] = SPI_READ_RX(SPI0);
+        }
+
+        /* Set PA.3 high to deselect the slave */
+        PA3 = 1;
+
+        u32JedecId = (u8RxData[0] << 16) | (u8RxData[1] << 8) | u8RxData[2];
+
+        printf("JEDEC ID: 0x%X\n", u32JedecId);
+        printf("  Manufacturer ID: 0x%X\n", u8RxData[0]);
+        printf("  Memory Type ID: 0x%X\n", u8RxData[1]);
+        printf("  Memory Capacity ID: 0x%X\n", u8RxData[2]);
+        printf("\n");
+
+        /* Delay for a while */
+        CLK_SysTickDelay(1000000);
     }
-
-    /* Set PA.3 high to deselect the slave */
-    PA3 = 1;
-
-    u32JedecId = (u8RxData[0] << 16) | (u8RxData[1] << 8) | u8RxData[2];
-
-    printf("JEDEC ID: 0x%X\n", u32JedecId);
-    printf("  Manufacturer ID: 0x%X\n", u8RxData[0]);
-    printf("  Memory Type ID: 0x%X\n", u8RxData[1]);
-    printf("  Memory Capacity ID: 0x%X\n", u8RxData[2]);
-
-
-    printf("\n\nExit SPI driver sample code.\n");
-
-    /* Reset SPI0 */
-    SPI_Close(SPI0);
-    while(1);
 }
 
 void SYS_Init(void)
