@@ -1,22 +1,30 @@
 MEMORY
 {
-    IROM2 (rx) : ORIGIN = 0x6800, LENGTH = 0x1800    /* 4KB */
+    IROM2 (rx) : ORIGIN = 0x00006000, LENGTH = 0x2000    /* 8KB */
     IROM1 (rx) : ORIGIN = 0x00100000, LENGTH = 0x800     /* 2KB */
     RAM   (rw) : ORIGIN = 0x20000000, LENGTH = 0x1000    /* 4KB */
 }
 
-GROUP(libgcc.a libc.a libm.a libnosys.a) 
-/* GROUP(libgcc.a) */
+/* GROUP(libgcc.a libc.a libm.a libnosys.a) */
+GROUP(libgcc.a libc.a libm.a libnosys.a)
 
 ENTRY(Reset_Handler)
 
 SECTIONS
 {
-        /* IROM2：專用常數與指標陣列段 */
+    /* IROM2：手動標記放置大函式 / 少用函式 */
+    .irom2_text :
+    {
+        __irom2_text_start = .;
+        KEEP(*(.irom2_text*))
+        __irom2_text_end = .;
+    } > IROM2 AT > IROM2
+
+    /* IROM2：專用常數與指標陣列段 */
     .rodata_irom2 :
     {
         __rodata_irom2_start = .;
-        KEEP(*(.rodata_irom2*))
+        *(.rodata_irom2*)
         __rodata_irom2_end = .;
     } > IROM2 AT > IROM2
 
@@ -74,16 +82,6 @@ SECTIONS
     } > IROM1
     __exidx_end = .;
 
-        /* IROM2：手動標記放置大函式 / 少用函式 */
-    .irom2_text :
-    {
-        __irom2_text_start = .;
-        *(.irom2_text*)
-        __irom2_text_end = .;
-    } > IROM2 AT > IROM2
-
-
-    
 	/* To copy multiple ROM to RAM sections,
 	 * uncomment .copy.table section and,
 	 * define __STARTUP_COPY_MULTIPLE in startup_ARMCMx.S */

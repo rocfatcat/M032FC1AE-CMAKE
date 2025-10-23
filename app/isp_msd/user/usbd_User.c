@@ -10,6 +10,7 @@
 #include <string.h>
 #include "M031Series_User.h"
 #include "rom.h"
+
 #if 0
 #define DBG_PRINTF      printf
 #else
@@ -88,6 +89,8 @@ IROM2_SECTION void USBD_Open(const S_USBD_INFO_T *param)
 
     /* Force SE0 */
     USBD->SE0 = 1;
+
+
 }
 
 /**

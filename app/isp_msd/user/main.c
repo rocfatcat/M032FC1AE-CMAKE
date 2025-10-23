@@ -6,14 +6,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * @copyright (C) 2021 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
-
+#include <stdio.h>
 #include "M031Series_User.h"
 #include "massstorage.h"
+#include "NuMicro.h"
 #include "rom.h"
-#include "stdio.h"
 #define TRIM_INIT           (SYS_BASE+0x118)
-
-IROM2_SECTION void SYS_Init(void)
+IROM2_SECTION int SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
@@ -21,6 +20,9 @@ IROM2_SECTION void SYS_Init(void)
     /* Unlock protected registers */
     SYS_UnlockReg();
 
+    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
+    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
+    
     /* Enable Internal RC 48MHz clock */
     CLK->PWRCTL = (CLK_PWRCTL_HIRCEN_Msk);
 
@@ -35,18 +37,21 @@ IROM2_SECTION void SYS_Init(void)
     /* USB Clock = HIRC / 1 */
     CLK->CLKDIV0 = CLK->CLKDIV0 & ~CLK_CLKDIV0_USBDIV_Msk;
 
+    /* Enable module clock */
+    CLK->APBCLK0 |= CLK_APBCLK0_USBDCKEN_Msk;
+
     /* Enable UART0 clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
     /* Switch UART0 clock source to HIRC */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
 
+    /* Update System Core Clock */
+    SystemCoreClockUpdate();
+
     /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
                     (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
-
-    /* Enable module clock */
-    CLK->APBCLK0 |= CLK_APBCLK0_USBDCKEN_Msk;
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -64,14 +69,14 @@ IROM2_SECTION void gotoAPROM(void)
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
-const uint8_t msg [] = "Check boot setting...\n";
 IROM2_SECTION int32_t main(void)
 {   
     uint32_t u32TrimInit;
+
     /* The code should boot from LDROM: check the boot setting */
-    // UART_Write(UART0, (uint8_t *)msg, sizeof(msg) - 1);
+    
     /* Check if GPA.0 is low */
-    if ( 0)
+    if (PE8 != 0)
     {
         /* Boot from AP */
         gotoAPROM();
@@ -85,8 +90,7 @@ IROM2_SECTION int32_t main(void)
     
     SYS_Init();
     UART_Open(UART0, 115200);
-    /* Print out message */
-    printf("M031 Series USB Mass Storage Device Example\n");
+    UART_Write(UART0, "Hello World\n", 12);
     USBD_Open(&gsInfo);
 
     /* Endpoint configuration */
@@ -147,7 +151,7 @@ IROM2_SECTION int32_t main(void)
 			
         MSC_ProcessCmd();
 
-        if (0)
+        if (PE8 != 0)
         {   
             /* Reset */
             gotoAPROM();

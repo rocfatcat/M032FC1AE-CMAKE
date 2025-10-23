@@ -11,7 +11,7 @@
 #include "M031Series_User.h"
 #include "massstorage.h"
 #include "rom.h"
-#include "stdio.h"
+
 #if 0
 #define DBG_PRINTF      printf
 #else
@@ -39,14 +39,14 @@ uint32_t g_u32BytesInStorageBuf;
 uint32_t g_u32BulkBuf0, g_u32BulkBuf1;
 
 /* CBW/CSW variables */
-IROM2_DATA_SECTION struct CBW g_sCBW;
-IROM2_DATA_SECTION struct CSW g_sCSW;
+struct CBW g_sCBW;
+struct CSW g_sCSW;
 
-IROM2_DATA_SECTION uint32_t MassBlock[MASS_BUFFER_SIZE / 4];
-IROM2_DATA_SECTION uint32_t Storage_Block[STORAGE_BUFFER_SIZE / 4];
+uint32_t MassBlock[MASS_BUFFER_SIZE / 4];
+uint32_t Storage_Block[STORAGE_BUFFER_SIZE / 4];
 
 /*--------------------------------------------------------------------------*/
-IROM2_DATA_SECTION uint8_t g_au8InquiryID[36] =
+uint8_t g_au8InquiryID[36] =
 {
     0x00,                   /* Peripheral Device Type */
     0x80,                   /* RMB */
@@ -76,7 +76,6 @@ static uint8_t g_au8ModePage_3F[64] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x1C, 0x06, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00
 };
-
 
 void USBD_IRQHandler(void)
 {
@@ -144,7 +143,6 @@ void USBD_IRQHandler(void)
             /* Clear event flag */
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP2);
             /* Bulk IN */
-            printf("ACK 1\r\n");
             MSC_AckCmd();
         }
 
@@ -334,18 +332,14 @@ IROM2_SECTION void MSC_ReadCapacity1(uint32_t u32Offset, uint8_t u8OPCode)
         /* Block Length. Fixed to be 512 (MSB first) */
         pu8Desc[18] = 0x02;
     }
-}
 
+}
 
 IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 {
     uint32_t u32Len;
     uint32_t u32Buf;
-    printf("MSC_Read u8IsTrig = %d\n", u8IsTrig);
-    printf("g_u32Length = %d\n", g_u32Length);
-    printf("g_u32BytesInStorageBuf = %d\n", g_u32BytesInStorageBuf);
-    printf("g_u32Address = %x\n", g_u32Address);
-    printf("g_u32LbaAddress = %x\n", g_u32LbaAddress);
+
     if(USBD_GET_EP_BUF_ADDR(EP2) == g_u32BulkBuf1)
         u32Buf = g_u32BulkBuf0;
     else
@@ -353,8 +347,6 @@ IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
 
     if (!u8IsTrig)
     {
-        printf("u32Buf = %x\n", u32Buf);
-        printf("g_u8Size = %x\n", g_u8Size);
         USBD_SET_EP_BUF_ADDR(EP2, u32Buf);
 
         /* Trigger to send out the data packet */
@@ -403,7 +395,6 @@ IROM2_SECTION void MSC_Read(uint8_t u8IsTrig)
         USBD_SET_PAYLOAD_LEN(EP2, 0);
 }
 
-
 IROM2_SECTION void MSC_ModeSense10(void)
 {
     uint8_t NumHead, NumSector;
@@ -412,7 +403,7 @@ IROM2_SECTION void MSC_ModeSense10(void)
     /* Clear the command buffer */
     *((uint32_t *)MassCMD_BUF) = 0;
     *((uint32_t *)MassCMD_BUF + 1) = 0;
-    printf("MSC_ModeSense10 au8Data = %x\n", g_sCBW.au8Data[0]);
+
     switch(g_sCBW.au8Data[0])
     {
     case 0x3F:
@@ -487,7 +478,6 @@ IROM2_SECTION void MSC_Write(void)
         }
 
         g_u8BulkState = BULK_IN;
-        printf("ACK 2\r\n");
         MSC_AckCmd();
     }
 }
@@ -524,7 +514,6 @@ IROM2_SECTION void MSC_ProcessCmd(void)
         g_sCSW.dCSWTag = g_sCBW.dCBWTag;
 
         /* Parse Op-Code of CBW */
-        printf("MSC_ProcessCmd CBW OpCode = %x\n", g_sCBW.u8OPCode);
         switch(g_sCBW.u8OPCode)
         {
         case UFI_VERIFY_10:
@@ -532,7 +521,6 @@ IROM2_SECTION void MSC_ProcessCmd(void)
         {
             DBG_PRINTF("Test Unit\n");
             g_u8BulkState = BULK_IN;
-            printf("ACK 3\r\n");
             MSC_AckCmd();
             return;
         }
@@ -715,7 +703,6 @@ IROM2_SECTION void MSC_ProcessCmd(void)
     }
 }
 
-
 IROM2_SECTION void MSC_AckCmd(void)
 {
     /* Bulk IN */
@@ -735,7 +722,7 @@ IROM2_SECTION void MSC_AckCmd(void)
 
         g_sCSW.dCSWDataResidue = 0;
         g_sCSW.bCSWStatus = 0;
-        printf("MSC_AckCmd u8OPCode = %x\n", g_sCBW.u8OPCode);
+ 
         switch(g_sCBW.u8OPCode)
         {
         case UFI_READ_FORMAT_CAPACITY:
@@ -746,11 +733,9 @@ IROM2_SECTION void MSC_AckCmd(void)
         {
             if((g_u32Length > 0) && (g_sCBW.u8OPCode != UFI_INQUIRY))
             {
-                printf("MSC_AckCmd MSC_Read(0) g_u32Length = %d\n",g_u32Length);
                 MSC_Read(0);
                 return;
             }
-            printf("MSC_AckCmd MSC_Read(0) g_u32Length = %d u32len = %d\n",g_u32Length, u32len);
 
             if (u32len > 36)
                 g_sCSW.dCSWDataResidue = u32len - 36;
@@ -797,8 +782,6 @@ IROM2_SECTION void MSC_AckCmd(void)
             break;
         }
         }
-
-        printf("MSC_AckCmd dCSWDataResidue = %x, bCSWStatus = %x g_u32BulkBuf1 = %x\n", g_sCSW.dCSWDataResidue, g_sCSW.bCSWStatus, g_u32BulkBuf1);
 
         /* Return the CSW */
         USBD_SET_EP_BUF_ADDR(EP2, g_u32BulkBuf1);

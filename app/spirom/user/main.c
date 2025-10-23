@@ -17,6 +17,8 @@
 /* Function prototype declaration */
 void SYS_Init(void);
 void SPI_Init(void);
+void SysTick_Handler(void);
+void delay(uint32_t);
 
 /* ------------- */
 /* Main function */
@@ -54,6 +56,13 @@ int main(void)
     printf("    UART0_RXD(PF.2)\n    UART0_TXD(PF.3)\n\n");
     printf("Reading JEDEC ID from SPI flash...\n");
 
+    /* Configure SysTick to generate an interrupt every 1 second */
+    if (SysTick_Config(SystemCoreClock / 10U) != 0U)
+    {
+        /* 設定失敗 — 處理錯誤 */
+        while (1) {;}
+    }
+
     while(1)
     {
         /* Set PA.3 low to select the slave */
@@ -88,9 +97,7 @@ int main(void)
         printf("  Memory Type ID: 0x%X\n", u8RxData[1]);
         printf("  Memory Capacity ID: 0x%X\n", u8RxData[2]);
         printf("\n");
-
-        /* Delay for a while */
-        CLK_SysTickDelay(1000000);
+        delay(100);
     }
 }
 
@@ -135,6 +142,10 @@ void SYS_Init(void)
     GPIO_SetMode(PA, BIT3, GPIO_MODE_OUTPUT);
     PA3 = 1; /* Set high by default */
 
+    /* Configure PA.0 for ISP LED */
+    GPIO_SetMode(PA, BIT0, GPIO_MODE_OUTPUT);
+    PA0 = 0; /* Set low by default */
+
 
     /* Update System Core Clock */
     /* User can use SystemCoreClockUpdate() to calculate SystemCoreClock and CyclesPerUs automatically. */
@@ -152,6 +163,21 @@ void SPI_Init(void)
 
     /* Disable the automatic hardware slave select function. */
     SPI_DisableAutoSS(SPI0);
+}
+
+volatile uint32_t g_u32Ticks = 0;
+void SysTick_Handler(void)
+{
+    if(g_u32Ticks++ %10 == 9)
+    {
+        PA0 = PA0 ^ 1;
+        printf("tick...\n");
+    }
+}
+
+void delay(uint32_t second)
+{
+    while(g_u32Ticks % second != 0){};
 }
 
 

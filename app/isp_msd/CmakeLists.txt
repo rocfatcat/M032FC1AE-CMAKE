@@ -4,13 +4,16 @@ set(CMAKE_BUILD_TYPE Release)
 
 add_executable(isp_msd
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
     ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series_user.s
-    # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series_User.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
-    
+
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/user/startup_M031Series.S
+
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/acmp.c
     # ${M031BSP_DIR}/Library/StdDriver/src/adc.c
@@ -24,12 +27,12 @@ add_executable(isp_msd
     # ${M031BSP_DIR}/Library/StdDriver/src/pdma.c
     # ${M031BSP_DIR}/Library/StdDriver/src/pwm.c
     # ${M031BSP_DIR}/Library/StdDriver/src/qspi.c
-    ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/retarget.c
     # ${M031BSP_DIR}/Library/StdDriver/src/rtc.c
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/sys.c
+    ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -56,39 +59,39 @@ target_include_directories(isp_msd
 # 自動套用所有 linker 選項 + script
 # configure_target_linking(isp_msd)
 target_link_options(isp_msd PRIVATE
-    # "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
-    "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32k.ld"
+    "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K_iap_ldrom.ld"
     "-Xlinker" "--gc-sections"
-    "-Wl,-Map=isp_msd.map"
-    # "-Wl,-N"
+    "-Wl,-Map=isp_msd.map" 
     # "-nostartfiles"
     # "-nostdlib"
     "--specs=nano.specs" 
-    #"--specs=nosys.specs"
+    "--specs=nosys.specs"
 )
-finalize_output(isp_msd)
+#finalize_output(isp_msd)
 
-# # 生成 IROM1.bin
-# add_custom_command(
-#     TARGET isp_msd POST_BUILD
-#     COMMAND ${CMAKE_OBJCOPY} -O binary
-#             --only-section=.text
-#             --only-section=.rodata
-#             "$<TARGET_FILE:isp_msd>"
-#             "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
-#     COMMENT "Generating LDROM.bin"
-# )
+# 生成 IROM1.bin
+add_custom_command(
+    TARGET isp_msd POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --remove-section=.irom2_text
+            --remove-section=.rodata_irom2
+            --remove-section=.rodata_ptr8
+            --remove-section=.rodata_ptr32
+            "$<TARGET_FILE:isp_msd>"
+            "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
+    COMMENT "Generating LDROM.bin"
+)
 
-# # 生成 IROM2.bin
-# add_custom_command(
-#     TARGET isp_msd POST_BUILD
-#     COMMAND ${CMAKE_OBJCOPY} -O binary
-#             --only-section=.irom2_text
-#             --only-section=.rodata_irom2
-#             --only-section=.rodata_ptr8
-#             --only-section=.rodata_ptr32
-#             "$<TARGET_FILE:isp_msd>"
-#             "${CMAKE_CURRENT_BINARY_DIR}/APROM.bin"
-#     # COMMAND python -c "f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin.tmp','rb');d=f.read();f.close();f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin','wb');f.write(b'\\xFF'*0x7000+d);f.close()"
-#     COMMENT "Generating APROM.bin"
-# )
+# 生成 IROM2.bin
+add_custom_command(
+    TARGET isp_msd POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.irom2_text
+            --only-section=.rodata_irom2
+            --only-section=.rodata_ptr8
+            --only-section=.rodata_ptr32
+            "$<TARGET_FILE:isp_msd>"
+            "${CMAKE_CURRENT_BINARY_DIR}/APPOM.bin"
+    # COMMAND python -c "f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin.tmp','rb');d=f.read();f.close();f=open(r'${CMAKE_CURRENT_BINARY_DIR}/APROM.bin','wb');f.write(b'\\xFF'*0x7000+d);f.close()"
+    COMMENT "Generating APROM.bin"
+)

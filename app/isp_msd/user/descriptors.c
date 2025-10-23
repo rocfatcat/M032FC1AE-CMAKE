@@ -99,7 +99,7 @@ IROM2_DATA8P_SECTION const uint8_t *gpu8UsbString[2] =
     gu8VendorStringDesc
 };
 
-IROM2_DATA_SECTION const S_USBD_INFO_T gsInfo =
+IROM2_USBINFO_PTR_DATA_SECTION const S_USBD_INFO_T gsInfo =
 {
     gu8DeviceDescriptor,
     gu8ConfigDescriptor,
