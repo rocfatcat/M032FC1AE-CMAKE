@@ -49,15 +49,15 @@ IROM2_SECTION int SYS_Init(void)
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
-    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
-    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
-                    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
+    /* Set PF multi-function pins for UART0 RXD=PF.2 and TXD=PF.3 */
+    SYS->GPF_MFPL = (SYS->GPF_MFPL & ~(SYS_GPF_MFPL_PF2MFP_Msk | SYS_GPF_MFPL_PF3MFP_Msk))    |       \
+                    (SYS_GPF_MFPL_PF2MFP_UART0_RXD | SYS_GPF_MFPL_PF3MFP_UART0_TXD);
 
     /* Lock protected registers */
     SYS_LockReg();
 }
 
-IROM2_SECTION void gotoAPROM(void)
+IROM2_SECTION void gotoAPROM_Old(void)
 {
     /* Boot from AP */
     FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
@@ -66,21 +66,45 @@ IROM2_SECTION void gotoAPROM(void)
     while(1);
 }
 
+IROM2_SECTION void gotoAPROM()
+{
+#ifdef __GNUC__                        /* for GNU C compiler */
+    uint32_t    u32Data;
+#endif
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
+    FMC_Open();
+
+    NVIC_DisableIRQ(USBD_IRQn);
+
+    /*  NOTE!
+     *     Before change VECMAP, user MUST disable all interrupts.
+     */
+    FMC_SetVectorPageAddr(FMC_APROM_BASE);        /* Vector remap APROM page 0 to address 0. */
+    if (g_FMC_i32ErrCode != 0)
+    {
+        while (1);
+    }
+
+    FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
+
+    SYS_LockReg();                                /* Lock protected registers */
+
+    /* Software reset to boot to LDROM */
+    NVIC_SystemReset();
+}
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 IROM2_SECTION int32_t main(void)
-{   
+{
     uint32_t u32TrimInit;
+    uint32_t u32LedCounter = 0;
+    char buffer[35]; // 足夠大的緩衝區 (32 位整數最大 32 位 + 負號 + '\0')
 
-    /* The code should boot from LDROM: check the boot setting */
-    
-    /* Check if GPA.0 is low */
-    if (PE8 != 0)
-    {
-        /* Boot from AP */
-        gotoAPROM();
-    }
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -90,7 +114,23 @@ IROM2_SECTION int32_t main(void)
     
     SYS_Init();
     UART_Open(UART0, 115200);
-    UART_Write(UART0, "Hello World\n", 12);
+    UART_Write(UART0, "ISP MSD Bootload\r\n", 18);
+
+    /* The code should boot from LDROM: check the boot setting */
+    // 設定 PA.0 為 QUASI 模式
+    GPIO_SetMode(PA, BIT0, GPIO_MODE_QUASI);
+    PA0 = 1;  // internal pull high
+    /* Check if GPA.0 is low */
+    if (PA0)
+    {
+        /* Boot from AP */
+        gotoAPROM();
+    }
+    
+    GPIO_SetMode(PA, BIT0, GPIO_MODE_OUTPUT);
+    PA0 = 1;
+
+    
     USBD_Open(&gsInfo);
 
     /* Endpoint configuration */
@@ -118,6 +158,11 @@ IROM2_SECTION int32_t main(void)
     USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
     while(1)
     {
+        if(u32LedCounter++ > 100000)
+        {
+            PA0 ^= 1;
+            u32LedCounter = 0;
+        }
        /* Start USB trim if it is not enabled. */
         if((SYS->HIRCTRIMCTL & SYS_HIRCTRIMCTL_FREQSEL_Msk) != 1)
         {
@@ -151,10 +196,10 @@ IROM2_SECTION int32_t main(void)
 			
         MSC_ProcessCmd();
 
-        if (PE8 != 0)
-        {   
-            /* Reset */
-            gotoAPROM();
-        }
+        // if (PE8 != 0)
+        // {
+        //     /* Reset */
+        //     gotoAPROM();
+        // }
     }
 }

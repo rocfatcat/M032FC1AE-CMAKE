@@ -76,7 +76,6 @@ IROM2_SECTION void DataFlashRead(uint32_t u32Addr, uint32_t * u32Buf)
     }
 }
 
-
 IROM2_SECTION void FMC_ISP(uint32_t u32Cmd, uint32_t u32Addr, uint32_t u32Data)
 {
     FMC->ISPCMD = u32Cmd;
@@ -92,6 +91,22 @@ IROM2_SECTION void FMC_ISP(uint32_t u32Cmd, uint32_t u32Addr, uint32_t u32Data)
         FMC->ISPCTL |= FMC_ISPCTL_ISPFF_Msk;
         while(1);
     }
+    if ( u32Cmd == FMC_ISPCMD_PROGRAM)
+    {
+    	UART_Write(UART0, "ISP_P ", 6);
+    	UART_WriteHex(UART0, u32Addr, 16);
+    }
+    if ( u32Cmd == FMC_ISPCMD_PAGE_ERASE)
+    {
+    	UART_Write(UART0, "ISP_P_E ", 8);
+    	UART_WriteHex(UART0, u32Addr, 16);
+    }
+    if ( u32Cmd == FMC_ISPCMD_READ)
+    {
+    	UART_Write(UART0, "ISP_READ ", 9);
+    	UART_WriteHex(UART0, u32Addr, 16);
+    }
+
 }
 
 

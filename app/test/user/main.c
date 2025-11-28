@@ -1,166 +1,95 @@
-/******************************************************************************
- * @file     main.c
- * @version  V1.00
- * @brief    A project template for M031 MCU.
- *
- * SPDX-License-Identifier: Apache-2.0
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
-*****************************************************************************/
-#include <stdio.h>
-#include "M031Series_User.h"
-#include "massstorage.h"
-#include "NuMicro.h"
-#include "rom.h"
-#define TRIM_INIT           (SYS_BASE+0x118)
-IROM2_SECTION int SYS_Init(void)
+/* main.c (已修改為控制 PB.14) */
+
+#include <stdint.h>
+#include "M031Series.h "
+
+/* ================================================= */
+/* M032FC1AE 確切的寄存器定義 (PB.14)           */
+/* ================================================= */
+
+// /* 1. CLK 寄存器 */
+// #define CLK_AHBCLK          (*(volatile uint32_t *)(CLK_BASE + 0x18)) 
+// /* AHBCLK 寄存器 Bit 1: GPBRCKEN (啟用 Port B 時鐘) */
+// #define CLK_AHBCLK_GPBRCKEN (1 << 1) 
+
+// /* 2. GPIO Port B 寄存器 */
+// #define GPIOB_BASE          (0x40045000UL) /* Port B 的基地址 */
+// #define GPIOB_PMD           (*(volatile uint32_t *)(GPIOB_BASE + 0x00)) /* PMD 模式寄存器 */
+// #define GPIOB_DOUT          (*(volatile uint32_t *)(GPIOB_BASE + 0x0C)) /* DOUT 數據輸出寄存器 */
+
+// /* 3. PB.14 相關位定義 */
+// /* PB.14 模式位: PMD 寄存器的 [29:28] 位 (14 * 2 = 28) */
+// #define PB14_PMD_POS        (14 * 2)       
+// #define PB14_PMD_MASK       (0b11 << PB14_PMD_POS) /* 清除 PB.14 模式的掩碼 */
+// #define PB14_PMD_OUTPUT     (0b01 << PB14_PMD_POS) /* 設置為 Push-Pull Output (01) */
+// #define PB14_PIN            (1 << 14)      /* PB.14 在 DOUT 寄存器中的位掩碼 */
+extern void SystemInit(void);
+/* ------------------ 延遲函數 ------------------ */
+void simple_delay(unsigned int count)
+{
+    while (count--);
+}
+
+/* ------------------ 主程序 ------------------ */
+void SYS_Init(void)
 {
     /* Unlock protected registers */
     SYS_UnlockReg();
 
-    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
-    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
-    
-    /* Enable Internal RC 48MHz clock */
-    CLK->PWRCTL = (CLK_PWRCTL_HIRCEN_Msk);
+    /* Enable HIRC clock (Internal RC 48MHz) */
+    CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
-    /* Set Flash Access Delay */
-    FMC->FTCTL |= FMC_FTCTL_FOM_Msk;
+    /* Wait for HIRC clock ready */
+    CLK_WaitClockReady(CLK_STATUS_HIRCSTB_Msk);
 
-    /* Set core clock */
-    /* Switch HCLK clock source to HIRC */
-    CLK->CLKSEL0 = (CLK->CLKSEL0 & ~CLK_CLKSEL0_HCLKSEL_Msk) | CLK_CLKSEL0_HCLKSEL_HIRC;
-    /* Switch USB clock source to HIRC */
-    CLK->CLKSEL0 = (CLK->CLKSEL0 & ~CLK_CLKSEL0_USBDSEL_Msk) | CLK_CLKSEL0_USBDSEL_HIRC;
-    /* USB Clock = HIRC / 1 */
-    CLK->CLKDIV0 = CLK->CLKDIV0 & ~CLK_CLKDIV0_USBDIV_Msk;
-
-    /* Enable module clock */
-    CLK->APBCLK0 |= CLK_APBCLK0_USBDCKEN_Msk;
-
-    /* Enable UART0 clock */
-    CLK_EnableModuleClock(UART0_MODULE);
-
-    /* Switch UART0 clock source to HIRC */
-    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
+    /* Select HCLK clock source as HIRC and HCLK source divider as 1 */
+    CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_HIRC, CLK_CLKDIV0_HCLK(1));
 
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
-    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
-    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
-                    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
-
     /* Lock protected registers */
     SYS_LockReg();
+
 }
 
-/*
- * This is a template project for M031 series MCU. Users could based on this project to create their
- * own application without worry about the IAR/Keil project settings.
- *
- * This template application uses external crystal as HCLK source and configures UART0 to print out
- * "Hello World", users may need to do extra system configuration based on their system design.
- */
-
-
-IROM2_SECTION void gotoAPROM(void)
+int main(void)
 {
-    /* Boot from AP */
-    FMC->ISPCTL &= ~FMC_ISPCTL_BS_Msk;
-    NVIC_SystemReset();
-    //SYS->IPRST0 = SYS_IPRST0_CPURST_Msk;
-    while(1);
-}
+    /* 1. 啟用 GPIOB 的時鐘 */
+//     CLK_AHBCLK |= CLK_AHBCLK_GPBRCKEN;
 
-/*---------------------------------------------------------------------------------------------------------*/
-/*  Main Function                                                                                          */
-/*---------------------------------------------------------------------------------------------------------*/
-IROM2_SECTION int32_t main(void)
-{   
-    uint32_t u32TrimInit;
-
-    /* The code should boot from LDROM: check the boot setting */
-    
-    /* Check if GPA.0 is low */
-    if (PE8 != 0)
-    {
-        /* Boot from AP */
-        gotoAPROM();
-    }
-
-    /* Unlock protected registers */
-    SYS_UnlockReg();
-
-    /* Enable FMC ISP function. Before using FMC function, it should unlock system register first. */
-    FMC->ISPCTL = FMC_ISPCTL_ISPEN_Msk|FMC_ISPCTL_APUEN_Msk;
-    
+    /* 2. 配置 PB.14 為 Push-Pull 輸出模式 */
+//     GPIOB_PMD = (GPIOB_PMD & ~PB14_PMD_MASK) | PB14_PMD_OUTPUT;
     SYS_Init();
-    UART_Open(UART0, 115200);
-    UART_Write(UART0, "Hello World\n", 12);
-    USBD_Open(&gsInfo);
 
-    /* Endpoint configuration */
-    MSC_Init();
-
-    /* Start of USBD_Start() */
-    CLK_SysTickDelay(100000);
-
-    /* Disable software-disconnect function */
-    USBD->SE0 = 0;
-
-    /* Clear USB-related interrupts before enable interrupt */
-    USBD->INTSTS = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-
-    /* Enable USB-related interrupts. */
-    USBD->INTEN = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-    /* End of USBD_Start() */
-
-    NVIC_EnableIRQ(USBD_IRQn);
-
-    /* Backup default trim */
-    u32TrimInit = M32(TRIM_INIT);
-
-    /* Clear SOF */
-    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-    while(1)
+    GPIO_SetMode(PB, BIT14, GPIO_MODE_QUASI);
+    while (1) 
     {
-       /* Start USB trim if it is not enabled. */
-        if((SYS->HIRCTRIMCTL & SYS_HIRCTRIMCTL_FREQSEL_Msk) != 1)
-        {
-            /* Start USB trim only when SOF */
-            if(USBD->INTSTS & USBD_INTSTS_SOFIF_Msk)
-            {
-                /* Clear SOF */
-                USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+        /* 設置 PB.14 為低電平 (通常 LED 點亮) */
+        // GPIOB_DOUT &= ~PB14_PIN;
+        PB14 ^= 1;
+        simple_delay(200000); 
 
-                /* Re-enable crystal-less */
-                SYS->HIRCTRIMCTL = 0x01;
-                SYS->HIRCTRIMCTL |= SYS_HIRCTRIMCTL_REFCKSEL_Msk;
-            }
-        }
-
-        /* Disable USB Trim when error */
-        if(SYS->HIRCTRIMSTS & (SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk))
-        {
-            /* Init TRIM */
-            M32(TRIM_INIT) = u32TrimInit;
-
-            /* Disable crystal-less */
-            SYS->HIRCTRIMCTL = 0;
-
-            /* Clear error flags */
-            SYS->HIRCTRIMSTS = SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk;
-
-            /* Clear SOF */
-            USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-        }			
-			
-        MSC_ProcessCmd();
-
-        if (PE8)
-        {   
-            /* Reset */
-            gotoAPROM();
-        }
+        /* 設置 PB.14 為高電平 (通常 LED 熄滅) */
+        // GPIOB_DOUT |= PB14_PIN;
     }
 }
+
+/* ------------------ -nostdlib 必須提供的空函數 (極簡實現) ------------------ */
+void *memcpy(void *dest, const void *src, unsigned int n) {
+    char *dp = dest;
+    const char *sp = src;
+    while (n--) *dp++ = *sp++;
+    return dest;
+}
+
+void *memset(void *s, int c, unsigned int n) {
+    unsigned char *p = s;
+    while (n--) *p++ = (unsigned char)c;
+    return s;
+}
+
+void _exit(int status) { while(1); }
+int _kill(int pid, int sig) { return -1; }
+int _getpid(void) { return 1; }
+

@@ -6,8 +6,8 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
 
 # Toolchain prefix (modify as needed)
-set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10" CACHE PATH "Path to the ARM toolchain prefix")
-# set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1" CACHE PATH "Path to the ARM toolchain prefix")
+# set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10" CACHE PATH "Path to the ARM toolchain prefix")
+set(TOOLCHAIN_PREFIX "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1" CACHE PATH "Path to the ARM toolchain prefix")
 # Convert Windows path with spaces to CMake-safe path
 file(TO_CMAKE_PATH "${TOOLCHAIN_PREFIX}" TOOLCHAIN_PREFIX)
 
@@ -53,8 +53,8 @@ set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -std=c++11" CACHE INTERNAL "C++ Compile
 set(CMAKE_ASM_FLAGS "${OBJECT_GEN_FLAGS} -x assembler-with-cpp" CACHE INTERNAL "ASM Compiler options")
 
 # Debug flags
-set(CMAKE_C_FLAGS_DEBUG "-Og -g" CACHE INTERNAL "C Compiler options for debug")
-set(CMAKE_CXX_FLAGS_DEBUG "-Og -g" CACHE INTERNAL "C++ Compiler options for debug")
+set(CMAKE_C_FLAGS_DEBUG "-Os -g" CACHE INTERNAL "C Compiler options for debug")
+set(CMAKE_CXX_FLAGS_DEBUG "-Os -g" CACHE INTERNAL "C++ Compiler options for debug")
 set(CMAKE_ASM_FLAGS_DEBUG "-g" CACHE INTERNAL "ASM Compiler options for debug")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-Wl,--print-memory-usage" CACHE INTERNAL "Linker debug options")
 

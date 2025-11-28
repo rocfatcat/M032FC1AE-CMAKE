@@ -575,7 +575,7 @@ typedef volatile unsigned short vu16;
 #include "hdiv.h"
 #include "timer.h"
 #include "uart.h"
-#include "usbd_User.h"
+// #include "usbd_User.h"
 #include "usci_i2c.h"
 #include "usci_spi.h"
 #include "usci_uart.h"

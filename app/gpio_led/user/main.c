@@ -33,10 +33,11 @@ void SYS_Init(void)
 
     /* Update System Core Clock */
     SystemCoreClockUpdate();
-
+    
     /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
                     (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
+
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -59,7 +60,7 @@ int main()
 
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("Hello World\n");
-    GPIO_SetMode(PB, BIT14, GPIO_MODE_OUTPUT);
+    GPIO_SetMode(PB, BIT14, GPIO_MODE_QUASI);
 
     /* Got no where to go, just loop forever */
     while(1){
@@ -67,5 +68,6 @@ int main()
         CLK_SysTickDelay(500000);
     }
 }
+
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

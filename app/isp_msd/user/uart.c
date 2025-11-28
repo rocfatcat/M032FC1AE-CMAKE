@@ -21,7 +21,7 @@
  *
  *    @details      This function use to enable UART function and set baud-rate.
  */
-void UART_Open(UART_T *uart, uint32_t u32baudrate)
+IROM2_SECTION void UART_Open(UART_T *uart, uint32_t u32baudrate)
 {
     uint32_t u32UartClkSrcSel = 0ul, u32UartClkDivNum = 0ul;
     uint32_t u32ClkTbl[6ul] = {__HXT, 0ul, __LXT, __HIRC, 0ul, __LIRC};
@@ -96,7 +96,7 @@ void UART_Open(UART_T *uart, uint32_t u32baudrate)
  *
  *    @details      The function is to write data into TX buffer to transmit data by UART.
  */
-uint32_t UART_Write(UART_T *uart, uint8_t pu8TxBuf[], uint32_t u32WriteBytes)
+IROM2_SECTION uint32_t UART_Write(UART_T *uart, uint8_t pu8TxBuf[], uint32_t u32WriteBytes)
 {
     uint32_t  u32Count, u32delayno;
     uint32_t  u32Exit = 0ul;
@@ -130,7 +130,7 @@ uint32_t UART_Write(UART_T *uart, uint8_t pu8TxBuf[], uint32_t u32WriteBytes)
 
 }
 
-void UART_WriteHex(UART_T *uart, uint32_t value, uint8_t digits)
+IROM2_SECTION void UART_WriteHex(UART_T *uart, uint32_t value, uint8_t digits)
 {
     char hex[] = "0123456789ABCDEF";
     char out[2] = {'0','0'};

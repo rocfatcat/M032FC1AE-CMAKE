@@ -7,19 +7,9 @@
  * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
+#include "rom.h"
 #include "NuMicro.h"
-#include "isp_user.h"
-#include "hid_transfer.h"
-
-void _exit(int status)
-{
-    (void)status;
-    while (1)
-    {
-        // 如果要重啟可以用：
-        // NVIC_SystemReset();
-    }
-}
+#include "uart.h"
 /*
  * This is a template project for M031 series MCU. Users could based on this project to create their
  * own application without worry about the IAR/Keil project settings.
@@ -28,7 +18,7 @@ void _exit(int status)
  * "Hello World", users may need to do extra system configuration based on their system design.
  */
 
-void SYS_Init(void)
+IROM2_SECTION void SYS_Init(void)
 {
 
     /* Unlock protected registers */
@@ -46,16 +36,18 @@ void SYS_Init(void)
     /* Set Flash Access Delay */
     FMC->FTCTL |= FMC_FTCTL_FOM_Msk;
 
+    /* Enable UART0 clock */
+    CLK_EnableModuleClock(UART0_MODULE);
+
+    /* Switch UART0 clock source to HIRC */
+    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
+
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
-    /* Switch USB clock source to HIRC */
-    CLK->CLKSEL0 = (CLK->CLKSEL0 & ~CLK_CLKSEL0_USBDSEL_Msk) | CLK_CLKSEL0_USBDSEL_HIRC;
-    /* USB Clock = HIRC / 1 */
-    CLK->CLKDIV0 = CLK->CLKDIV0 & ~CLK_CLKDIV0_USBDIV_Msk;
-
-    /* Enable module clock */
-    CLK->APBCLK0 |= CLK_APBCLK0_USBDCKEN_Msk;
+    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
+    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
+                    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -63,81 +55,65 @@ void SYS_Init(void)
 }
 
 
-int main(void)
+IROM2_SECTION int main(void)
 {
-    /* function pointer */
-    FUNC_PTR    *func;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
     
     /* Init System, peripheral clock and multi-function I/O */
     SYS_Init();
-
-    /* Checking if flash page size matches with target chip's */
-    if ((GET_CHIP_SERIES_NUM == CHIP_SERIES_NUM_I) || (GET_CHIP_SERIES_NUM == CHIP_SERIES_NUM_G))
-    {
-        if (FMC_FLASH_PAGE_SIZE != 2048)
-        {
-            /* FMC_FLASH_PAGE_SIZE is different from target device */
-            /* Please enable the compiler option PAGE_SIZE_2048 in fmc.h */
-            while (SYS->PDID);
-        }
-    }
-    else
-    {
-        if (FMC_FLASH_PAGE_SIZE != 512)
-        {
-            /* FMC_FLASH_PAGE_SIZE is different from target device */
-            /* Please disable the compiler option PAGE_SIZE_2048 in fmc.h */
-            while (SYS->PDID);
-        }
-    }
+    UART_Open(UART0, 115200);
 
     CLK->AHBCLK |= CLK_AHBCLK_ISPCKEN_Msk;
 
     FMC->ISPCTL |= (FMC_ISPCTL_ISPEN_Msk | FMC_ISPCTL_APUEN_Msk);
 
-    g_apromSize = GetApromSize();
+    /* Connect UART to PC, and open a terminal tool to receive following message */
+//     printf("Hello\n");
+    UART_Write(UART0, "Hello\n", 6);
+    GPIO_SetMode(PB, BIT14, GPIO_MODE_QUASI);
 
-    GetDataFlashInfo(&g_dataFlashAddr, &g_dataFlashSize);
-
-    if (DetectPin != 0)
-    {
-        goto _APROM;
+    /* Got no where to go, just loop forever */
+    while(1){
+        PB14 ^= 1;
+        CLK_SysTickDelay(500000);
     }
 
-    /* Open USB controller */
-    USBD_Open(&gsInfo, HID_ClassRequest, NULL);
-    /*Init Endpoint configuration for HID */
-    HID_Init();
-    /* Start USB device */
-    USBD_Start();
-    /* Enable USB device interrupt */
-    NVIC_EnableIRQ(USBD_IRQn);
+//     if (DetectPin != 0)
+//     {
+//         goto _APROM;
+//     }
 
-    while (DetectPin == 0)
-    {
-        if (bUsbDataReady == TRUE)
-        {
-            ParseCmd((uint8_t *)usb_rcvbuf, EP3_MAX_PKT_SIZE);
-            EP2_Handler();
-            bUsbDataReady = FALSE;
-        }
-    }
 
-    /* Reset USB function*/
-    SYS_ResetModule(USBD_RST);
-
-_APROM:
-    /* Change vector page address to APROM */
-    FMC_SetVectorPageAddr(FMC_APROM_BASE);
-    /* Point to the reset handler address which application uses */
-    func = (FUNC_PTR *) * (uint32_t *)(FMC_APROM_BASE + 4);
-    /* Set stack pointer base address to the one which application uses */
-    __set_SP(*(uint32_t *)FMC_APROM_BASE);
-    func();
+// _APROM:
+//     /* Change vector page address to APROM */
+//     FMC_SetVectorPageAddr(FMC_APROM_BASE);
+//     /* Point to the reset handler address which application uses */
+//     func = (FUNC_PTR *) * (uint32_t *)(FMC_APROM_BASE + 4);
+//     /* Set stack pointer base address to the one which application uses */
+//     __set_SP(*(uint32_t *)FMC_APROM_BASE);
+//     func();
 
     /* Trap the CPU */
-    while (1);
+//     while (1);
+}
+
+/**
+ * @brief 硬體錯誤處理函式 (Hard Fault Processor)
+ * * 此函式在發生 Hard Fault 時被啟動程式碼呼叫。
+ * 您可以在此處實作任何錯誤處理或除錯邏輯。
+ */
+IROM2_SECTION uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
+{
+    // 在這裡加入您的錯誤處理邏輯，例如：
+    // 1. 讓一個 LED 閃爍以指示錯誤。
+    // 2. 存取堆疊資訊以進行更深層的除錯。
+    // 3. 永遠停留在此處，以便除錯器可以連上來檢查狀態。
+
+    // 簡單地進入無限迴圈
+    while (1)
+    {
+        // 保持迴圈
+    }
 }

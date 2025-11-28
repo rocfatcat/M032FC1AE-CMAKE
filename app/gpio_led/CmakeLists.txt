@@ -48,5 +48,15 @@ target_include_directories(gpio_led
 
 # 自動套用所有 linker 選項 + script
 configure_target_linking(gpio_led)
+
+
+# target_link_options(gpio_led PRIVATE
+#     "-T${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm_32K.ld"
+#     "-Xlinker" "--gc-sections"
+#     "-Wl,-Map=gpio_led.map" 
+#     # "-nostartfiles"
+#     # "-nostdlib"
+#     "--specs=nano.specs"
+# )
 finalize_output(gpio_led)
 

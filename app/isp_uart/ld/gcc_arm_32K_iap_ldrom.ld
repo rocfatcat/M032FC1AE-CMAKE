@@ -6,7 +6,7 @@ MEMORY
 }
 
 /* GROUP(libgcc.a libc.a libm.a libnosys.a) */
-GROUP(libgcc.a libc_nano.a libnosys.a)
+GROUP(libgcc.a libc.a libm.a libnosys.a)
 
 ENTRY(Reset_Handler)
 
@@ -39,8 +39,7 @@ SECTIONS
     {
         *(.rodata_ptr32*)
     } > IROM2 AT > IROM2
-    
-    
+
     /* 主程式碼優先放 IROM1 */
     .text :
     {
