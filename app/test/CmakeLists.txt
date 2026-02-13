@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_BUILD_TYPE Release)
 add_executable(test
     ${CMAKE_CURRENT_SOURCE_DIR}/user/main.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
+#     ${CMAKE_CURRENT_SOURCE_DIR}/user/usbd_User.c
+#     ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
+#     ${CMAKE_CURRENT_SOURCE_DIR}/user/MassStorage.c
+#     ${CMAKE_CURRENT_SOURCE_DIR}/user/DataFlashProg.c
+#     ${CMAKE_CURRENT_SOURCE_DIR}/user/descriptors.c
 
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/uart.c
     # ${CMAKE_CURRENT_SOURCE_DIR}/user/system_M031Series.c
@@ -30,7 +30,7 @@ add_executable(test
     # ${M031BSP_DIR}/Library/StdDriver/src/spi.c
     ${M031BSP_DIR}/Library/StdDriver/src/sys.c
     # ${M031BSP_DIR}/Library/StdDriver/src/timer.c
-    # ${M031BSP_DIR}/Library/StdDriver/src/uart.c
+    ${M031BSP_DIR}/Library/StdDriver/src/uart.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usbd.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_i2c.c
     # ${M031BSP_DIR}/Library/StdDriver/src/usci_spi.c
@@ -55,9 +55,9 @@ target_include_directories(test
 # 可選：自定 linker script，否則使用預設值
 # set_linker_script(IAP_Bootload "${CMAKE_CURRENT_SOURCE_DIR}/ld/gcc_arm.ld")
 
-set(DESCRIPTORS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/descriptors.c.o")
-    message(STATUS "Object file: ${DESCRIPTORS_OBJ}")
-    message(STATUS "Object file: ${M031BSP_DIR}")
+# set(DESCRIPTORS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/descriptors.c.o")
+#     message(STATUS "Object file: ${DESCRIPTORS_OBJ}")
+#     message(STATUS "Object file: ${M031BSP_DIR}")
 
 # 自動套用所有 linker 選項 + script
 # configure_target_linking(test)
@@ -83,6 +83,7 @@ add_custom_command(
             --remove-section=.rodata_irom2
             --remove-section=.rodata_ptr8
             --remove-section=.rodata_ptr32
+	    --remove-section=.fill_to_6000
             "$<TARGET_FILE:test>"
             "${CMAKE_CURRENT_BINARY_DIR}/LDROM.bin"
     COMMENT "Generating LDROM.bin"
@@ -92,6 +93,7 @@ add_custom_command(
 add_custom_command(
     TARGET test POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary
+            --only-section=.fill_to_6000
             --only-section=.irom2_text
             --only-section=.rodata_irom2
             --only-section=.rodata_ptr8

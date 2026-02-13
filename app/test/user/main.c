@@ -7,8 +7,6 @@
  * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
-#include "M031Series_User.h"
-#include "massstorage.h"
 #include "NuMicro.h"
 #include "rom.h"
 #define TRIM_INIT           (SYS_BASE+0x118)
@@ -46,9 +44,9 @@ IROM2_SECTION int SYS_Init(void)
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
-    /* Set PB multi-function pins for UART0 RXD=PB.12 and TXD=PB.13 */
-    SYS->GPB_MFPH = (SYS->GPB_MFPH & ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk))    |       \
-                    (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
+    /* Set PB multi-function pins for UART0 RXD=PF.2 and TXD=PF.3 */
+    SYS->GPF_MFPL = (SYS->GPF_MFPL & ~(SYS_GPF_MFPL_PF2MFP_Msk | SYS_GPF_MFPL_PF3MFP_Msk))    |       \
+                    (SYS_GPF_MFPL_PF2MFP_UART0_RXD | SYS_GPF_MFPL_PF3MFP_UART0_TXD);
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -82,11 +80,11 @@ IROM2_SECTION int32_t main(void)
     /* The code should boot from LDROM: check the boot setting */
     
     /* Check if GPA.0 is low */
-    if (PE8 != 0)
-    {
-        /* Boot from AP */
-        gotoAPROM();
-    }
+//     if (PE8 != 0)
+//     {
+//         /* Boot from AP */
+//         gotoAPROM();
+//     }
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -96,71 +94,21 @@ IROM2_SECTION int32_t main(void)
     
     SYS_Init();
     UART_Open(UART0, 115200);
-    UART_Write(UART0, "Hello World\n", 12);
-    USBD_Open(&gsInfo);
-
-    /* Endpoint configuration */
-    MSC_Init();
+    UART_Write(UART0, "Hello World\n", 13);
 
     /* Start of USBD_Start() */
-    CLK_SysTickDelay(100000);
-
-    /* Disable software-disconnect function */
-    USBD->SE0 = 0;
-
-    /* Clear USB-related interrupts before enable interrupt */
-    USBD->INTSTS = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-
-    /* Enable USB-related interrupts. */
-    USBD->INTEN = (USBD_INT_BUS | USBD_INT_USB | USBD_INT_FLDET | USBD_INT_WAKEUP);
-    /* End of USBD_Start() */
-
-    NVIC_EnableIRQ(USBD_IRQn);
 
     /* Backup default trim */
     u32TrimInit = M32(TRIM_INIT);
 
-    /* Clear SOF */
-    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
     while(1)
     {
-       /* Start USB trim if it is not enabled. */
-        if((SYS->HIRCTRIMCTL & SYS_HIRCTRIMCTL_FREQSEL_Msk) != 1)
-        {
-            /* Start USB trim only when SOF */
-            if(USBD->INTSTS & USBD_INTSTS_SOFIF_Msk)
-            {
-                /* Clear SOF */
-                USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-
-                /* Re-enable crystal-less */
-                SYS->HIRCTRIMCTL = 0x01;
-                SYS->HIRCTRIMCTL |= SYS_HIRCTRIMCTL_REFCKSEL_Msk;
-            }
-        }
-
-        /* Disable USB Trim when error */
-        if(SYS->HIRCTRIMSTS & (SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk))
-        {
-            /* Init TRIM */
-            M32(TRIM_INIT) = u32TrimInit;
-
-            /* Disable crystal-less */
-            SYS->HIRCTRIMCTL = 0;
-
-            /* Clear error flags */
-            SYS->HIRCTRIMSTS = SYS_HIRCTRIMSTS_CLKERIF_Msk | SYS_HIRCTRIMSTS_TFAILIF_Msk;
-
-            /* Clear SOF */
-            USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
-        }			
-			
-        MSC_ProcessCmd();
-
-        if (PE8)
-        {   
-            /* Reset */
-            gotoAPROM();
-        }
+        // if (PE8)
+        // {   
+        //     /* Reset */
+        //     gotoAPROM();
+        // }
+    	CLK_SysTickDelay(10000);
+    	UART_Write(UART0, "Hello World2\n\r", 15);
     }
 }
